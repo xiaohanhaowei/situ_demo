@@ -61,14 +61,14 @@ def data_proc(content, xls_file, ):
     for index, sub_data in enumerate(data):
         sub_data_content = []
         for i in range(2):
-            if str(sub_data[4 + i]) == 'nan':
+            if str(sub_data[5 + i]) == 'nan':
                 break
             else:
-                sub_data[4 + i] = sub_data[4 + i].replace('\n', '')
-                sub_data[4 + i] = sub_data[4 + i].replace('\\n', '')
-                sub_data[4 + i] = sub_data[4 + i].replace(' ', '')
-                sub_data[4 + i] = sub_data[4 + i].replace('\r', '')
-                sub_data_content.append(sub_data[4 + i].strip('。'))
+                sub_data[5 + i] = sub_data[5 + i].replace('\n', '')
+                sub_data[5 + i] = sub_data[5 + i].replace('\\n', '')
+                sub_data[5 + i] = sub_data[5 + i].replace(' ', '')
+                sub_data[5 + i] = sub_data[5 + i].replace('\r', '')
+                sub_data_content.append(sub_data[5 + i].strip('。'))
         # FIXME: Check if the content is blank!!
         sentence = ';'.join(sub_data_content[:2])
         if len(sub_data_content) != 2:
@@ -85,8 +85,8 @@ def data_proc(content, xls_file, ):
 
 
 if __name__ == "__main__":
-    # xls_dir = './data/7-20全天.xls'
-    xls_dir = './data/test.xls'
+    xls_dir = './data/train.xls'
+    # xls_dir = './data/test.xls'
     path = './library/new_situ_pos.json'
     content = classify.load_rules(path)
     # single_detect(content, slice_p)
