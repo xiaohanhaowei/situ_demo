@@ -12,7 +12,8 @@
 import os
 import pandas as pd 
 import classify
-import situ_addr_data_prepare
+import numpy as np
+import random
 
 def file_based_data_prep(xls_dir, save_path='./log_file'):
     '''
@@ -49,12 +50,44 @@ def file_based_data_prep(xls_dir, save_path='./log_file'):
             sentences.append(sentence)           
     return sentences
 
-def data_proc(xls_data):
-    for sub_data in xls_data:
-        classify.single_detect(sub_data)
+
+def data_proc(content, xls_file, ):
+    sheet = pd.read_excel(xls_file)
+    ncols = sheet.shape[1]
+    # sheet.insert(5, "判断", ["" for _ in range(nrows)])
+    data = sheet.values
+    new_data = list()
+    index_list = list()
+    for index, sub_data in enumerate(data):
+        sub_data_content = []
+        for i in range(2):
+            if str(sub_data[4 + i]) == 'nan':
+                break
+            else:
+                sub_data[4 + i] = sub_data[4 + i].replace('\n', '')
+                sub_data[4 + i] = sub_data[4 + i].replace('\\n', '')
+                sub_data[4 + i] = sub_data[4 + i].replace(' ', '')
+                sub_data[4 + i] = sub_data[4 + i].replace('\r', '')
+                sub_data_content.append(sub_data[4 + i].strip('。'))
+        # FIXME: Check if the content is blank!!
+        sentence = ';'.join(sub_data_content[:2])
+        if len(sub_data_content) != 2:
+            result = '不是盗销自行车-lack-content'
+        else:
+            result = classify.single_detect(content, sentence)
+        # new_sub_data = np.insert(sub_data, 5, [result])
+        new_data.append(result)
+        index_list.append(index+1)
+    sheet.insert(ncols, "result", new_data)
+    sheet.insert(ncols, 'index', index_list)
+    sheet.to_excel('./test_result/result-%s.xls' % xls_file.split('.xls')[0].split('/')[-1], index=False)
+
 
 
 if __name__ == "__main__":
-    xls_dir = ''
-    xls_data = file_based_data_prep(xls_dir)
-    data_proc(xls_data)
+    # xls_dir = './data/7-20全天.xls'
+    xls_dir = './data/test.xls'
+    path = './library/new_situ_pos.json'
+    content = classify.load_rules(path)
+    # single_detect(content, slice_p)
+    data_proc(content, xls_dir)
