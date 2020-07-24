@@ -118,6 +118,15 @@ def extract_class(class_name, prob):
                 'type3': {bike_dict[class_name]: prob}
         }
 
+
+def once_forever(sentence):
+    path = './library/new_situ_pos.json'
+    slice_p = check_rules(sentence)
+    content = load_rules(path)
+    bike_class, prob = single_detect(content, slice_p)
+    return extract_class(bike_class, prob)
+    
+
 if __name__ == "__main__":
     # slice_p = 'F姜先生报在太玉园小区42号楼2单元，电动自行车被盗。（已复核）7时22分53秒 已复核。(陈迪大)。经民警刘力嘉电话联系，报警人姜国荣（321119196703214370）称2020年7月19日23时许将电动车停放在太玉园东区42号楼2单元单元楼道内，于7时发现电动车不见了，我所民警英明现场开展工作。经请示值班领导赵志明同意上报。'
     # slice_p = '刘占东先生报在潞城镇侉店村60号底商门口，电动车被盗。（已复核）经出现场了解：报警人称其店内工人刘卫峰（男，身份证：412825198111038518，电话：18500279068）2020年7月19日晚22时许将两轮电动车停放在北京市通州区潞城镇侉子店村60号底商海尔电器门店前，7月20日早6时30分许发现其停放的电动车丢失，目前我所主办民警付海涛已受理此事。该警情经主办民警付海涛、值班警长杨超、值班领导袁振龙核实上报。'
@@ -125,11 +134,12 @@ if __name__ == "__main__":
     # slice_p = '李先生报在北辰西路亚丁湾酒店门口，电动车被盗。（已复核）民警宋旭日现场处置，经核实，报警人于本月17日13时许将电动自行车（无发票，白色雅迪电动车，3成新，价格不详）停放在朝阳区俊峰华亭A座东侧路边后离开，今日回来发现车被盗，周边无监控设备。民警已按行政案件受理。属治安类警情，负责勤务指挥副所长王大未同意上报'
     slice_p = '李兆龙报：在管庄杨闸地铁（388路）公交站（往北京进京方向），手机被盗。但该群众手机号码机主信息提示黄色警示人员，请予以关注并按相关规范开展工作。（已复核）出警民警刘金文赶赴现场经了解，报警人称停放在管庄乡388路公交车站停放的手机（爱玛牌白色）被盗，现已受理为治安案件，负责勤务指挥领导芦菲同意上报。'
     # slice_p = '报：在望京湖光中街桔子酒店门口，电动车被盗。（已复核）；民警任曲博桑到现场（22时34分）'
-    slice_p = check_rules(slice_p)
-    path = './library/new_situ_pos.json'
-    content = load_rules(path)
-    bike_class, prob = single_detect(content, slice_p)
-    print(extract_class(bike_class, prob))
+    # slice_p = check_rules(slice_p)
+    # path = './library/new_situ_pos.json'
+    # content = load_rules(path)
+    # bike_class, prob = single_detect(content, slice_p)
+    # print(extract_class(bike_class, prob))
     # print('bike: {}, prob: {}'.format(bike_dict[bike_class], str(prob)))
     # bike_demo = demo()
     # bike_demo.run()
+    print(once_forever(slice_p))
