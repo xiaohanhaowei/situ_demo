@@ -27,7 +27,7 @@ class demo():
 
 
 def load_rules(path):
-    json_file = open(path, 'rb')
+    json_file = open(path, 'r')
     content = json.load(json_file, encoding='utf-8')
     # content = json.dumps(content, ensure_ascii=False)
     return content
