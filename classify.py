@@ -127,6 +127,76 @@ def once_forever(sentence):
     return extract_class(bike_class, prob)
     
 
+def single_detect_from_lib(content, single_slice):
+    if single_slice == None:
+        return None, None
+    else:
+        keys = list(content.keys())
+        # override the follows to satisfy the TODO-1
+        bike_nouns = copy.deepcopy(content[keys[0]]['noun'])
+        bike_nouns.extend(content[keys[1]]['noun'])
+        # end override
+        not_in = 0
+        ban_in = False
+        # TODO-1  primarily do the elecbike checking then do the bike checking
+        # for noun in bike_nouns:
+        correspond_class = None
+        prob = 0
+        for i in range(2):
+            for noun in content[keys[i]]['noun']:
+                if noun not in single_slice:
+                    not_in += 1
+                    # correspond_class = ''
+                else:
+                    correspond_class = keys[i]
+                    break
+            if correspond_class is not None:
+                break
+            # 如果在里边呢？
+        if not_in == len(bike_nouns):
+            print('不是盗销自行车')
+            not_in = 0
+            prob = rd.uniform(0.0, 0.1)
+            # return '不是盗销自行车-key'
+            return '其他', prob
+        else:      
+            # for i in range(2):
+                # 进入下一层: 看是否不符合相关自行车警情
+            for ban in sorted(content[correspond_class]['overcome'], key=lambda x: len(x), reverse=True):
+                if ban in single_slice:
+                    print(ban)
+                    target_ban = ban
+                    ban_in = True
+                    break
+                else:
+                    continue
+            if ban_in:
+                ban_in = False
+                print('不是 %s' % correspond_class)
+                prob = rd.uniform(0.2,0.4)
+                # return '不是盗销自行车-%s' % target_ban
+                return '其他'
+            # 判断该条是否确切在含有动词，或者词组，如果有就是，没有就是其他。
+            verb_grp = content[correspond_class]['verb']
+            verb_grp.extend(content[correspond_class]['group'])
+            for verb in verb_grp:
+                if verb in single_slice:
+                    print('in %s' % correspond_class)
+                    prob = rd.uniform(0.9, 0.99)
+                    return correspond_class, prob
+                    
+                else:
+                    continue
+            # return '不是盗销自行车-verbdone'
+            prob = rd.uniform(0.2, 0.4)
+            return '其他', prob
+
+# 从数据库中推数据
+def once_forever_lib(content, single_slice):
+    slice_p = check_rules(single_slice)
+    bike_class, prob = single_detect(content, slice_p)
+    return extract_class(bike_class, prob)
+
 if __name__ == "__main__":
     # slice_p = 'F姜先生报在太玉园小区42号楼2单元，电动自行车被盗。（已复核）7时22分53秒 已复核。(陈迪大)。经民警刘力嘉电话联系，报警人姜国荣（321119196703214370）称2020年7月19日23时许将电动车停放在太玉园东区42号楼2单元单元楼道内，于7时发现电动车不见了，我所民警英明现场开展工作。经请示值班领导赵志明同意上报。'
     # slice_p = '刘占东先生报在潞城镇侉店村60号底商门口，电动车被盗。（已复核）经出现场了解：报警人称其店内工人刘卫峰（男，身份证：412825198111038518，电话：18500279068）2020年7月19日晚22时许将两轮电动车停放在北京市通州区潞城镇侉子店村60号底商海尔电器门店前，7月20日早6时30分许发现其停放的电动车丢失，目前我所主办民警付海涛已受理此事。该警情经主办民警付海涛、值班警长杨超、值班领导袁振龙核实上报。'
