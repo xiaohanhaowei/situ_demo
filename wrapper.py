@@ -8,12 +8,12 @@
 @Desc    :   wrapper the single sentence detectiong function.
 '''
 
-
 import os
-import pandas as pd 
+
+import pandas as pd
+
 import classify
-import numpy as np
-import random
+
 
 def file_based_data_prep(xls_dir, save_path='./log_file'):
     '''
@@ -32,7 +32,7 @@ def file_based_data_prep(xls_dir, save_path='./log_file'):
     sentences = []
     for base, sub in zip(xls_dir_list, xls_list):
         log_file = open(os.path.join(save_path, '_'.join([sub.split('.')[0], 'log.txt'])), 'w')
-        sheet = pd.read_excel(os.path.join(base, sub))    
+        sheet = pd.read_excel(os.path.join(base, sub))
         data = sheet.values
         for sub_data in data:
             sub_data_content = []
@@ -47,14 +47,13 @@ def file_based_data_prep(xls_dir, save_path='./log_file'):
                     sub_data[7 + i] = sub_data[7 + i].replace('\r', '')
                     sub_data_content.append(sub_data[7 + i].strip('。'))
             sentence = ';'.join(sub_data_content[:2])
-            sentences.append(sentence)           
+            sentences.append(sentence)
     return sentences
 
 
-def data_proc(content, xls_file, ):
+def data_proc(content, xls_file):
     sheet = pd.read_excel(xls_file)
     ncols = sheet.shape[1]
-    # sheet.insert(5, "判断", ["" for _ in range(nrows)])
     data = sheet.values
     new_data = list()
     index_list = list()
@@ -75,13 +74,11 @@ def data_proc(content, xls_file, ):
             result = '不是盗销自行车-lack-content'
         else:
             result = classify.single_detect(content, sentence)
-        # new_sub_data = np.insert(sub_data, 5, [result])
         new_data.append(result)
-        index_list.append(index+1)
+        index_list.append(index + 1)
     sheet.insert(ncols, "result", new_data)
     sheet.insert(ncols, 'index', index_list)
     sheet.to_excel('./test_result/result-%s.xls' % xls_file.split('.xls')[0].split('/')[-1], index=False)
-
 
 
 if __name__ == "__main__":
