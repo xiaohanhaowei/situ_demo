@@ -103,7 +103,9 @@ class api_interface():
         else:
             print("%s not in situ library, can not update content" % type1_type2_)
 
-    def train(self, lable, excel_path):
+
+    # added by hongwei.wang
+    def train(self, excel_path):
         '''
         @Author: hongwei.wang
         @date: 2020-07-29
@@ -139,22 +141,25 @@ class api_interface():
             else:
                 
                 result, reason = classify.single_detect_for_analyse(self.content, self.type2_3, sentence)
-                if result == self.type2_3 and sub_data_content[19] ==self.type2:
+                if result == self.type2_3 and sub_data[19] ==self.type2:
                     compatible_count += 1 
-
+            
             new_data.append(result)
-            new_data.append(reason)
             reason_list.append(reason)
+        # sheet['result'] = pd.Series(new_data)
+        # sheet['reason'] = pd.Series(reason_list)
+
         sheet.insert(ncols, "result", new_data)
         sheet.insert(ncols, 'reason',reason_list)
-        # sheet.to_excel('./test_result/result-%s.xls' % excel_path.split('.xls')[0].split('/')[-1], index=False)
+        # sheet.to_excel('./result-%s.xls' % excel_path.split('.xls')[0].split('/')[-1], index=False)
         self.new_sheet = pd.DataFrame(sheet, columns=[excel_header[5], excel_header[6], excel_header[18],   excel_header[19], excel_header[20], excel_header[21], 'result', 'reason'])
         #                                        警情摘要          反馈内容           类别1                类别2             类别3              类别4              类别2_类别3  错因
-        self.new_sheet.to_excel('./test_result/result.xls')
-        accuracy, recall, fpr = self.percision_cal(compatible_count, new_sheet)
+        self.new_sheet.to_excel('./result.xls')
+        accuracy, recall, fpr = self.percision_cal(compatible_count)
         return self.new_sheet, accuracy, recall, fpr
 
-    def percision_cal(self, count, new_sheet):
+
+    def percision_cal(self, count):
         '''
         @Author: hongwei.wang
         @date: 2020-07-29
@@ -163,19 +168,21 @@ class api_interface():
         @return: 
         @raise: 
         '''
+        new_sheet = self.new_sheet
         accuracy = 0.
         recall = 0.
         fpr = 0.
 
-        total = new_sheet.shape[0]
-        excel_header = new_sheet.columns.tolist()
-        TP = len(new_sheet[excel_header[3]] == self.type2 and new_sheet[excel_header[6]].split('_')[0]==self.type2)
-        FP = len(new_sheet[excel_header[3]] == self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
-        TN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
-        FN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == self.type2)
-        accuracy = float(float((TP + TN) / total))
-        recall = float(count / len(new_sheet[excel_header[3]] == self.type2))
-        fpr = float(TN / len(new_sheet[excel_header[3]] != self.type2))
+        # total = new_sheet.shape[0]
+        # excel_header = new_sheet.columns.tolist()
+        # import pdb; pdb.set_trace()
+        # TP = len(new_sheet[excel_header[3]].tolist() == [self.type2 for data in new_sheet[excel_header[3]]] and new_sheet[excel_header[6]].tolist().split('_')[0] == self.type2)
+        # FP = len(new_sheet[excel_header[3]] == self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
+        # TN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
+        # FN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == self.type2)
+        # accuracy = float(float((TP + TN) / total))
+        # recall = float(count / len(new_sheet[excel_header[3]] == self.type2))
+        # fpr = float(TN / len(new_sheet[excel_header[3]] != self.type2))
         return accuracy, recall, fpr
 
     def query_data(self):
@@ -196,18 +203,18 @@ if __name__ == "__main__":
     # api_interface()
     infer = api_interface('公共秩序管理类_盗销自行车_电动车')
     print("infer.content", infer.content)
+    # kun's test
+    # print("from_label_get_dict", infer.from_label_get_dict("公共秩序管理类_盗销自行车_电动车"))
 
-    print("from_label_get_dict", infer.from_label_get_dict("公共秩序管理类_盗销自行车_电动车"))
+    # infer.update_content(
+    #     type1_type2_="公共秩序管理类_盗销自行车_电动车",
+    #     wordlist=[{"kname": "取消报警####", "type": "overcome"}],
+    #     sign="add")
 
-    infer.update_content(
-        type1_type2_="公共秩序管理类_盗销自行车_电动车",
-        wordlist=[{"kname": "取消报警####", "type": "overcome"}],
-        sign="add")
-
-    infer.update_content(
-        type1_type2_="公共秩序管理类_盗销自行车_电动车",
-        wordlist=[{"kname": "山地车####", "type": "noun"}],
-        sign="add")
+    # infer.update_content(
+    #     type1_type2_="公共秩序管理类_盗销自行车_电动车",
+    #     wordlist=[{"kname": "山地车####", "type": "noun"}],
+    #     sign="add")
 
     # infer.update_content(
     #     type1_type2_="公共秩序管理类_盗销自行车_电动车",
@@ -218,3 +225,5 @@ if __name__ == "__main__":
     #     type1_type2_="公共秩序管理类_盗销自行车_电动车",
     #     wordlist=[{"kname": "山地车####", "type": "noun"}],
     #     sign="del")
+    # my test
+    infer.train('./test.xls')
