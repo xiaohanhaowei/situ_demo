@@ -8,76 +8,82 @@
 @Desc    :   None
 '''
 
+import json
+import os
+
 
 class api_interface():
-    
-    def __init__(self, content):
-        self.content = content
 
+    def __init__(self):
+        self.jsonpath = os.path.join(os.path.dirname(__file__), 'library/new_situ_pos.json')
+        self.content = {}
+        self.load_json()
 
-    def update_content(self, online):
-        '''
-        @Author: hongwei.wang
-        @date: 2020-07-29
-        @func: 
-        @args: 
-            content: json instance that need update
-            online: the manually updated content that need to update to the json instance
-            operation: string type, either 'del' or 'add'
-        @return: 
-        @raise: 
-        '''
-        newdict = dict()
-        for type1_type2_type3, word_list, operation in online.items():
-            if "_" not in type1_type2_type3:
-                print("The type label is not right : 'type1_type2_type3'")
-                continue
-            type2_3 = "_".join(type1_type2_type3.split("_")[1:3])
-            
-            subdict = dict()
-            for wd in word_list:
-                keyword = wd.get("kname", "")
-                simword = wd.get("name", "")
-                type_ = wd.get("type", "")
-                if keyword not in subdict:
-                    subdict[keyword] = list()
-                    subdict[keyword].append(keyword)
-                    if simword:
-                        subdict[keyword].append(simword)
-                else:
-                    if simword:
-                        subdict[keyword].append(simword)
-                if type_ not in subdict:
-                    subdict[type_] = list()
-                    subdict[type_].append(keyword)
-                else:
-                    subdict[type_].append(keyword)
-            newdict[type2_3] = subdict
+    def load_json(self):
+        with open(self.jsonpath, 'r', encoding="utf-8") as json_file:
+            self.content = json.load(json_file)
 
-        if newdict:
-            new_content = dict()
-            for type2_type3, word_dict in self.content.items():
-                sudict = newdict.get(type2_type3, {})
-                if subdict:
-                    for i, k in enumerate(["verb", "noun", "space", "group", "overcome"]):
-                        words = word_dict.get(k, [])
-                        new_words = sudict.get(k, [])
-                        inter_words = list(set(words).intersection(set(new_words))) if k != "overcome" else new_words
-
-                        for w in inter_words:
-                            simwords = subdict.get(w, [])
-                            words.extend(simwords)
-                        words = list(set(words))
-                        word_dict[k] = words
-                        new_content[type2_type3] = word_dict
-                else:
-                    new_content[type2_type3] = word_dict
-            # with open(path_out, 'w', encoding="utf-8") as json_out:
-            with open(path, 'w', encoding="utf-8") as json_out:
-                json.dump(new_content, json_out, ensure_ascii=False, indent=2)
-            if new_content:
-                return new_content
-            else:
-                return content
+    # 根据label 获取对应字典
+    def from_label_get_dict(self, type1_type2_=""):
+        if "_" not in type1_type2_:
+            print("%s not in situ library, can not pull" % type1_type2_)
+            return {}
         else:
-            return content
+            type2_ = "_".join(type1_type2_.split("_")[1:])
+            subdict = self.content.get(type2_, {})
+            get_dict = dict([(k, subdict.get(k, [])) for k in ["verb", "noun", "overcome"]])
+            return get_dict
+
+    # 根据online 数据 增删本地json数据
+    def update_content(self, type1_type2_="", wordlist=[], sign=""):
+        if "_" in type1_type2_:
+            type2_ = "_".join(type1_type2_.split("_")[1:])
+            subdict = self.content.get(type2_, {})
+            for w, worddict in enumerate(wordlist):
+                word = worddict.get("kname", "")
+                type_ = worddict.get("type", "")
+                if type_ not in subdict:
+                    if type_:
+                        subdict[type_] = list()
+                        subdict[type_].append(word)
+                    else:
+                        print("%s not in situ library, can not update content" % type_)
+                else:
+                    words = subdict[type_]
+                    if sign == "add" and word:
+                        words.append(word)
+                    elif sign == "del" and word in words and type_ == "overcome":
+                        words.remove(word)
+                    subdict[type_] = list(set(words))
+                    self.content[type2_] = subdict
+            with open(self.jsonpath, 'w', encoding="utf-8") as json_out:
+                json.dump(self.content, json_out, ensure_ascii=False, indent=2)
+        else:
+            print("%s not in situ library, can not update content" % type1_type2_)
+
+
+if __name__ == "__main__":
+        infer = api_interface()
+        print("infer.content", infer.content)
+
+        print("from_label_get_dict", infer.from_label_get_dict("公共秩序管理类_盗销自行车_电动车"))
+
+        infer.update_content(
+            type1_type2_="公共秩序管理类_盗销自行车_电动车",
+            wordlist=[{"kname": "取消报警####", "type": "overcome"}],
+            sign="add")
+
+        infer.update_content(
+            type1_type2_="公共秩序管理类_盗销自行车_电动车",
+            wordlist=[{"kname": "山地车####", "type": "noun"}],
+            sign="add")
+
+        # infer.update_content(
+        #     type1_type2_="公共秩序管理类_盗销自行车_电动车",
+        #     wordlist=[{"kname": "取消报警####", "type": "overcome"}],
+        #     sign="del")
+        #
+        # infer.update_content(
+        #     type1_type2_="公共秩序管理类_盗销自行车_电动车",
+        #     wordlist=[{"kname": "山地车####", "type": "noun"}],
+        #     sign="del")
