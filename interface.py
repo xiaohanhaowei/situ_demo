@@ -169,20 +169,29 @@ class api_interface():
         @raise: 
         '''
         new_sheet = self.new_sheet
-        accuracy = 0.
-        recall = 0.
-        fpr = 0.
+        accuracy = 0.93
+        recall = 0.87
+        fpr = 0.2
 
-        # total = new_sheet.shape[0]
-        # excel_header = new_sheet.columns.tolist()
-        # import pdb; pdb.set_trace()
-        # TP = len(new_sheet[excel_header[3]].tolist() == [self.type2 for data in new_sheet[excel_header[3]]] and new_sheet[excel_header[6]].tolist().split('_')[0] == self.type2)
+        total = new_sheet.shape[0]
+        excel_header = new_sheet.columns.tolist()
+        ee = new_sheet[excel_header[3]].tolist()  #实际的
+        ff = list(map(lambda x: x.split('_')[0], new_sheet[excel_header[6]].tolist()))  #推理的
+        gg =[self.type2 for data in new_sheet[excel_header[3]]]
+        tt = list(map(lambda x, y : x ==y, ee, gg))  #实际为真
+        ti = list(map(lambda x, y : x ==y, ff, gg))  #推理为真
+
+        TP = sum([x==True and y==True for x, y in zip(tt,ti)])
+        FP = sum([x==True and y==False for x, y in zip(tt,ti)])
+        TN = sum([x==False and y==False for x, y in zip(tt,ti)])
+        FN = sum([x==False and y==True for x, y in zip(tt,ti)])
+        # TP = len(new_sheet[excel_header[3]].tolist() == [self.type2 for data in new_sheet[excel_header[3]]] and list(map(lambda x: x.split('_')[0], new_sheet[excel_header[6]].tolist())) == [self.type2 for data in new_sheet[excel_header[6]]])
         # FP = len(new_sheet[excel_header[3]] == self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
         # TN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
         # FN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == self.type2)
-        # accuracy = float(float((TP + TN) / total))
-        # recall = float(count / len(new_sheet[excel_header[3]] == self.type2))
-        # fpr = float(TN / len(new_sheet[excel_header[3]] != self.type2))
+        accuracy = float(float((TP + TN) / total))
+        recall = float(count / len(new_sheet[excel_header[3]] == self.type2))
+        fpr = float(TN / len(new_sheet[excel_header[3]] != self.type2))
         return accuracy, recall, fpr
 
     def query_data(self):
