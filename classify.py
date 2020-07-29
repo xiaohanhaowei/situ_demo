@@ -100,6 +100,51 @@ def single_detect(content, single_slice):
             return '其他', prob
 
 
+def single_detect_for_analyse(content, target_label, single_slice):
+    if single_slice == None:
+        return '其他', '无内容'
+    else:
+
+        not_in = 0
+        ban_in = False
+        # TODO-1  primarily do the elecbike checking then do the bike checking
+        correspond_class = None
+        noun_len = len(content[target_label]['noun'])
+        for noun in content[target_label]['noun']:
+            if noun not in single_slice:
+                not_in += 1
+            else:
+                correspond_class = target_label
+                break
+        # 如果在里边呢？
+        if not_in == noun_len:
+            print('不是%s' % target_label)
+            not_in = 0
+            return '其他', 'no_noun'
+        else:
+            # 进入下一层: 看是否不符合相关自行车警情
+            for ban in sorted(content[correspond_class]['overcome'], key=lambda x: len(x), reverse=True):
+                if ban in single_slice:
+                    print("ban", ban)
+                    ban_in = True
+                    break
+                else:
+                    continue
+            if ban_in:
+                ban_in = False
+                print('不是 %s' % correspond_class)
+                return '其他', ban  
+            # 判断该条是否确切在含有动词，或者词组，如果有就是，没有就是其他。
+            verb_grp = content[correspond_class]['verb']
+            verb_grp.extend(content[correspond_class]['group'])
+            for verb in verb_grp:
+                if verb in single_slice:
+                    print('in %s' % correspond_class)
+                    return correspond_class, verb
+                else:
+                    continue
+            return '其他', 'no_verb'
+
 def extract_class(class_name, prob):
     prob = float('%0.4f' % prob) if prob else 0
     if class_name == '其他' or not class_name:
