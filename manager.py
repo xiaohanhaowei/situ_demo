@@ -78,8 +78,6 @@ def upload():
     try:
         file = request.files.get('file')
 
-        # basepath = os.path.dirname(__file__)
-        # upload_path = os.path.join(basepath, 'upload', secure_filename(file.filename))
         upload_path = "./upload/" + secure_filename(file.filename)
         file.save(upload_path)
 
