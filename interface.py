@@ -116,7 +116,7 @@ class api_interface(object):
             else:
                 
                 result, reason = classify.single_detect_for_analyse(self.content, label, sentence)
-                if result == self.type2 and sub_data[19] ==self.type2:
+                if result.split('_')[1] == self.type2 and sub_data[19] == self.type2:
                     compatible_count += 1 
             
             new_data.append(result)
@@ -162,6 +162,7 @@ class api_interface(object):
         excel_header = new_sheet.columns.tolist()
         ee = new_sheet[excel_header[3]].tolist()  # 实际的
         ff = list(map(lambda x: x.split('_')[0], new_sheet[excel_header[6]].tolist()))  # 推理的
+        
         gg = [self.type2 for data in new_sheet[excel_header[3]]]
         tt = list(map(lambda x, y: x == y, ee, gg))  # 实际为真
         ti = list(map(lambda x, y: x == y, ff, gg))  # 推理为真
@@ -175,8 +176,8 @@ class api_interface(object):
         # TN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
         # FN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == self.type2)
         accuracy = float(float((TP + TN) / total))
-        recall = float(count / len(new_sheet[excel_header[3]] == self.type2))
-        fpr = float(TN / len(new_sheet[excel_header[3]] != self.type2))
+        recall = float(TP / len(new_sheet[excel_header[3]] == self.type2))
+        fpr = 0 if len(new_sheet[excel_header[3]] != self.type2) == 0 else float(FN / len(new_sheet[excel_header[3]] != self.type2))
         return accuracy, recall, fpr
 
     def query_data(self):

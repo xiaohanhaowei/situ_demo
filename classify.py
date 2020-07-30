@@ -12,6 +12,7 @@ import copy
 import json
 import os
 import random as rd
+import collections
 
 # bike_dict = {
 #     '盗销自行车_电动车': '101001001',
@@ -35,7 +36,7 @@ def check_rules(sentence):
         return sentence
 
 
-def single_detect(content, single_slice):
+def single_detect_for_bike(content, single_slice):
     if single_slice == None:
         return None, None
     else:
@@ -92,9 +93,69 @@ def single_detect(content, single_slice):
             return '其他', prob
 
 
+def single_detect(content, single_slice):
+    one_hot_class_dict = collections.OrderedDict()
+    if single_slice == None:
+        return one_hot_class_dict
+    else:
+        keys = list(content.keys())
+        # override the follows to satisfy the TODO-1
+        not_in = 0
+        ban_in = False
+        verb_in = False
+        correspond_class = None
+        prob = 0
+        for sub_key in keys:
+            cand_nouns = copy.deepcopy(content[sub_key]['noun'])
+            for noun in cand_nouns:
+                if noun not in single_slice:
+                    not_in += 1
+                else:
+                    correspond_class = sub_key
+                    break
+            
+            # 如果在里边呢？
+            if not_in == len(cand_nouns):
+                not_in = 0
+                one_hot_class_dict.update({'{}'.format(sub_key): 0})
+                # prob = rd.uniform(0.0, 0.1)
+                # return '其他', prob
+            else:
+                # 进入下一层: 看是否不符合相管目标类警情
+                for ban in sorted(content[correspond_class]['overcome'], key=lambda x: len(x), reverse=True):
+                    if ban in single_slice:
+                        print("ban", ban)
+                        ban_in = True
+                        break
+                    else:
+                        continue
+                if ban_in:
+                    ban_in = False
+                    print('不是 %s' % correspond_class)
+                    one_hot_class_dict.update({'{}'.format(correspond_class): 0})
+                else:
+                    # 判断该条是否确切在含有动词，或者词组，如果有就是，没有就是其他。
+                    verb_grp = copy.deepcopy(content[correspond_class]['verb'])
+                    verb_grp.extend(content[correspond_class]['group'])
+                    # FIXME: need to judge if the 'verb_grp' list is null
+                    for verb in verb_grp:
+                        if verb in single_slice:
+                            print('in %s' % correspond_class)
+                            verb_in = True
+                            one_hot_class_dict.update({'{}'.format(sub_key): 1})
+                            break
+                        else:
+                            continue
+                    if verb_in is True:
+                        verb_in = False
+                    else:
+                        one_hot_class_dict.update({'{}'.format(sub_key): 0})
+        
+                # if there is no element that in verb_grp is compatible to single_slice, what should do?
+        return one_hot_class_dict
 def single_detect_for_analyse(content, target_label, single_slice):
     if single_slice == None:
-        return '其他', '无内容'
+        return '其他', 'no_content'
     else:
 
         not_in = 0
@@ -137,6 +198,18 @@ def single_detect_for_analyse(content, target_label, single_slice):
                     continue
             return '其他', 'no_verb'
 
+
+def extract_one_hot_class(one_hot_class_dict):
+    if sum(one_hot_class_dict.values()) != 1:
+        prob = rd.uniform(0,0.1)
+        return '其他', prob
+    else:
+        prob = rd.uniform(0.92, 0.95) 
+        for sub_class, value in one_hot_class_dict.items():
+            if value == 1:
+                return sub_class, prob
+
+
 def extract_class(class_name, prob):
     candidate_class = []
     prob = float('%0.4f' % prob) if prob else 0
@@ -150,10 +223,12 @@ def extract_class(class_name, prob):
     else:
         types = class_name.split('_')
         types_rank = len(types)
+        current_rank = 0
         # 先判断第一级标签
         for type1_class in class_dict['type1']:
             if type1_class['name'] == types[0]:
                 target_type1 = type1_class['key']
+                current_rank += 1
                 break
             else:
                 print('没有第一级目标类，该目标类为:%s。请重新训练该类' % types[0])
@@ -163,12 +238,26 @@ def extract_class(class_name, prob):
                     'type2': {},
                     'type3': {}
                 }
-        # 再判断最后一级标签
-        for last_class in class_dict['type%s' %types_rank]:
-            if last_class['name'] == types[-1]:
-                candidate_class.append(last_class['key'])
+        # 判断二级
+        for type2_class in class_dict['type2'][target_type1]:
+            if type2_class['name'] ==types[1]:
+                target_type2 = type2_class['key']
+                current_rank += 1
+        if current_rank != types_rank:
+            target_type3 = class_dict['type3'][target_type2][types[2]]
+            current_rank += 1
+            if current_rank != types_rank:
+                target_type4 = class_dict['type4'][target_type3][types[3]]
+                current_rank += 1
+                if current_rank != types_rank:
+                    candidate_class = class_dict['type5'][target_type4][types[4]]  # target_type5
+                    current_rank += 1
+                else:
+                    candidate_class = target_type4
             else:
-                continue
+                candidate_class = target_type3
+        else:
+            candidate_class = target_type2
         if not candidate_class:
             print('没有目标类，该目标类为:%s。请重新训练该类' % class_name)
             return {
@@ -179,10 +268,7 @@ def extract_class(class_name, prob):
                 } 
         # 需要一级标签和最终标签判断
         else:
-            for sub_class in candidate_class:
-                if target_type1 in sub_class:
-                    final_class = sub_class
-                    break
+            final_class = candidate_class
         # TODO:判断一下这个标签的长度
             if len(final_class) == 6:
                 return {
@@ -283,8 +369,10 @@ def once_forever(sentence, online={}):
         print("start update online data!")
         new_content = update_content(content, online)
     slice_p = check_rules(sentence)
-    bike_class, prob = single_detect(new_content, slice_p)
-    return extract_class(bike_class, prob)
+    one_hot_dict = single_detect(new_content, slice_p)
+    target_class, prob = extract_one_hot_class(one_hot_dict)
+    #  extract_class(target_class, prob)
+    return extract_class(target_class, prob)
 
 
 def single_detect_from_lib(content, single_slice):
