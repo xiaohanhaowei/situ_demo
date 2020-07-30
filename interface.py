@@ -7,12 +7,10 @@
 @Contact :   hongwei.wang@lynxi.com
 @Desc    :   None
 '''
+import classify
 import json
 import os
-
 import pandas as pd
-
-import classify
 
 
 class api_interface(object):
@@ -69,46 +67,6 @@ class api_interface(object):
                 json.dump(self.content, json_out, ensure_ascii=False, indent=2)
         else:
             print("type1_type2_ is %s, can not find in library" % type1_type2_)
-
-    # def update_content(self, type1_type2_="", wordlist=[], sign=""):
-    #     '''
-    #     @Author: qikun.zhang
-    #     @date: 2020-07-29
-    #     @func:
-    #     @args:
-    #         content: json instance that need update
-    #         online: the manually updated content that need to update to the json instance
-    #         operation: string type, either 'del' or 'add'
-    #     @return:
-    #     @raise:
-    #     '''
-    #     if "_" in type1_type2_:
-    #         type2_ = "_".join(type1_type2_.split("_")[1:])
-    #         if type2_ not in self.content:
-    #             self.content[type2_] = {}
-    #         subdict = self.content.get(type2_, {})
-    #         for w, worddict in enumerate(wordlist):
-    #             word = worddict.get("kname", "")
-    #             type_ = worddict.get("type", "")
-    #             if type_ not in subdict:
-    #                 if type_:
-    #                     subdict[type_] = list()
-    #                     subdict[type_].append(word)
-    #                 else:
-    #                     print("%s not in situ library, can not update content" % type_)
-    #             else:
-    #                 words = subdict[type_]
-    #                 if sign == "add" and word:
-    #                     words.append(word)
-    #                 # elif sign == "del" and word in words and type_ == "overcome":
-    #                 elif sign == "del" and word in words:
-    #                     words.remove(word)
-    #                 subdict[type_] = list(set(words))
-    #                 self.content[type2_] = subdict
-    #         with open(self.jsonpath, 'w', encoding="utf-8") as json_out:
-    #             json.dump(self.content, json_out, ensure_ascii=False, indent=2)
-    #     else:
-    #         print("%s not in situ library, can not update content" % type1_type2_)
 
     # added by hongwei.wang
     def train(self, label, excel_path):
