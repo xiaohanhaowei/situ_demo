@@ -7,24 +7,19 @@
 @Contact :   hongwei.wang@lynxi.com
 @Desc    :   None
 '''
-import classify
 import json
 import os
+
+import classify
 import pandas as pd
 
 
 class api_interface(object):
     def __init__(self):
-        self.jsonpath = os.path.join(os.path.dirname(__file__), 'library/new_situ_pos.json')
+        # self.jsonpath = os.path.join(os.path.dirname(__file__), 'library/new_situ_pos.json')
         # self.labelpath = os.path.join(os.path.dirname(__file__), 'library/label.json')
-        # self.jsonpath = './library/new_situ_pos.json'
-        self.content = {}
+        self.jsonpath = './library/new_situ_pos_offline.json'
         self.content = self.load_json(self.jsonpath)
-        # self.rank_label =self.load_json(self.labelpath)
-    
-    def load_json(self, path):
-        with open(path, 'r', encoding="utf-8") as json_file:
-            content = json.load(json_file)
 
     def load_json(self, path):
         with open(path, 'r', encoding="utf-8") as json_file:
@@ -114,7 +109,7 @@ class api_interface(object):
                 result = '其他'
                 reason = 'no_content'
             else:
-                
+
                 result, reason = classify.single_detect_for_analyse(self.content, label, sentence)
                 if result.split('_')[1] == self.type2 and sub_data[19] == self.type2:
                     compatible_count += 1 
@@ -134,7 +129,7 @@ class api_interface(object):
         self.new_sheet.to_excel('./result.xls')
         accuracy, recall, fpr = self.percision_cal(compatible_count)
         # return self.new_sheet, accuracy, recall, fpr
-        return {'data': self.new_sheet.to_json(), 
+        return {'data': self.new_sheet.to_json(force_ascii=False),
                 'indict': {
                     'len': self.new_sheet.shape[0],
                     'correct': compatible_count,
