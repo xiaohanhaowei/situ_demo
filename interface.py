@@ -134,7 +134,7 @@ class api_interface(object):
         self.new_sheet.to_excel('./result.xls')
         accuracy, recall, fpr = self.percision_cal(compatible_count)
         # return self.new_sheet, accuracy, recall, fpr
-        return {'data': self.new_sheet, 
+        return {'data': self.new_sheet.to_json(), 
                 'indict': {
                     'len': self.new_sheet.shape[0],
                     'correct': compatible_count,
