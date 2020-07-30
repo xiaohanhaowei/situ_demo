@@ -14,9 +14,8 @@ import os
 
 class api_interface():
     
-    def __init__(self, label):
-        self.type1, self.type2, self.type3 = label.split("_")
-        self.type2_3 = "_".join(label.split("_")[1:3])
+    def __init__(self):
+        
         
         # self.jsonpath = os.path.join(os.path.dirname(__file__), 'library/new_situ_pos.json')
         self.jsonpath = './library/new_situ_pos.json'
@@ -82,7 +81,7 @@ class api_interface():
 
 
     # added by hongwei.wang
-    def train(self, excel_path):
+    def train(self, label, excel_path):
         '''
         @Author: hongwei.wang
         @date: 2020-07-29
@@ -91,6 +90,9 @@ class api_interface():
         @return: 
         @raise: 
         '''
+        self.type1, self.type2, self.type3, _ = label.split("_")
+        self.type2_3 = "_".join(label.split("_")[1:3])
+        
         sheet = pd.read_excel(excel_path)
         excel_header = sheet.columns.tolist()
         print(excel_header)
