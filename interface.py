@@ -18,8 +18,7 @@ class api_interface(object):
     def __init__(self):
         # self.jsonpath = os.path.join(os.path.dirname(__file__), 'library/new_situ_pos.json')
         # self.labelpath = os.path.join(os.path.dirname(__file__), 'library/label.json')
-        self.jsonpath = './library/new_situ_pos.json'
-        self.content = {}
+        self.jsonpath = './library/new_situ_pos_offline.json'
         self.content = self.load_json(self.jsonpath)
 
     def load_json(self, path):

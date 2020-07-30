@@ -5,7 +5,6 @@ from classify import once_forever
 from werkzeug.utils import secure_filename
 from interface import api_interface
 import json
-import os
 from flask_docs import ApiDoc
 import shutil
 
@@ -229,7 +228,7 @@ def online():
     try:
         print("[request]:", request.data.decode(encoding='utf-8'))
         source_file = "./library/new_situ_pos.json"
-        source_file_bak = "./library/new_situ_pos_" + time.strftime("%H:%M:%S") + ".json"
+        source_file_bak = "./library/new_situ_pos_" + datetime.datetime.now().strftime("%y-%m-%d-%H-%M-%S") + ".json"
         shutil.copy(source_file, source_file_bak)
         offline_file = "./library/new_situ_pos_offline.json"
         shutil.copy(offline_file, source_file)

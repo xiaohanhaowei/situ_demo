@@ -6,3 +6,7 @@ __pycache__
 upload
 manager.spec
 common/__pycache__
+deploy/pca/manager
+deploy/pca/result.xls
+result.xls
+library/new_situ_pos_20*
