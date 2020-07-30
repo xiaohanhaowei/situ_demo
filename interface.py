@@ -16,7 +16,15 @@ import pandas as pd
 class api_interface(object):
     def __init__(self):
         self.jsonpath = os.path.join(os.path.dirname(__file__), 'library/new_situ_pos.json')
+        # self.labelpath = os.path.join(os.path.dirname(__file__), 'library/label.json')
+        # self.jsonpath = './library/new_situ_pos.json'
+        self.content = {}
         self.content = self.load_json(self.jsonpath)
+        # self.rank_label =self.load_json(self.labelpath)
+    
+    def load_json(self, path):
+        with open(path, 'r', encoding="utf-8") as json_file:
+            content = json.load(json_file)
 
     def load_json(self, path):
         with open(path, 'r', encoding="utf-8") as json_file:
@@ -78,8 +86,8 @@ class api_interface(object):
         @return: 
         @raise: 
         '''
-        self.type1, self.type2, self.type3, _ = label.split("_")
-        self.type2_3 = "_".join(label.split("_")[1:3])
+        self.type1, self.type2, self.type3 = label.split("_")[0:3]
+        # self.type2_3 = "_".join(label.split("_")[1:3])
 
         sheet = pd.read_excel(excel_path)
         excel_header = sheet.columns.tolist()
@@ -106,11 +114,11 @@ class api_interface(object):
                 result = '其他'
                 reason = 'no_content'
             else:
-
-                result, reason = classify.single_detect_for_analyse(self.content, self.type2_3, sentence)
-                if result == self.type2_3 and sub_data[19] == self.type2:
-                    compatible_count += 1
-
+                
+                result, reason = classify.single_detect_for_analyse(self.content, label, sentence)
+                if result == self.type2 and sub_data[19] ==self.type2:
+                    compatible_count += 1 
+            
             new_data.append(result)
             reason_list.append(reason)
         # sheet['result'] = pd.Series(new_data)
@@ -125,7 +133,16 @@ class api_interface(object):
         #                                        警情摘要          反馈内容           类别1                类别2             类别3              类别4              类别2_类别3  错因
         self.new_sheet.to_excel('./result.xls')
         accuracy, recall, fpr = self.percision_cal(compatible_count)
-        return self.new_sheet, accuracy, recall, fpr
+        # return self.new_sheet, accuracy, recall, fpr
+        return {'data': self.new_sheet, 
+                'indict': {
+                    'len': self.new_sheet.shape[0],
+                    'correct': compatible_count,
+                    'accuracy': accuracy, 
+                    'recall': recall, 
+                    'fpr': fpr
+                    }
+                }
 
     def percision_cal(self, count):
         '''
@@ -206,4 +223,4 @@ if __name__ == "__main__":
     #     sign="del")
 
     # my test
-    # infer.train('./test.xls')
+    print(infer.train("公共秩序管理类_盗销自行车_电动车", './test.xls'))

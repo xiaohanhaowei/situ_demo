@@ -13,19 +13,11 @@ import json
 import os
 import random as rd
 
-bike_dict = {
-    '盗销自行车_电动车': '101001001',
-    '盗销自行车_自行车': '101001002',
-    '其他': ''
-}
-
-
-class demo():
-    def __init__(self):
-        file = open('./library/situ.json', 'rb', encoding='utf-8')
-        self.situ_key = json.load(file)
-    def run(self):
-        pass
+# bike_dict = {
+#     '盗销自行车_电动车': '101001001',
+#     '盗销自行车_自行车': '101001002',
+#     '其他': ''
+# }
 
 
 def load_rules(path):
@@ -146,25 +138,87 @@ def single_detect_for_analyse(content, target_label, single_slice):
             return '其他', 'no_verb'
 
 def extract_class(class_name, prob):
+    candidate_class = []
     prob = float('%0.4f' % prob) if prob else 0
     if class_name == '其他' or not class_name:
         return {
+            # TODO: compatible to the inference api
             'type1': {},
             'type2': {},
             'type3': {}
         }
     else:
-        return {
-            'type1': {bike_dict[class_name][0:3]: prob},
-            'type2': {bike_dict[class_name][0:6]: prob},
-            'type3': {bike_dict[class_name]: prob}
-        }
+        types = class_name.split('_')
+        types_rank = len(types)
+        # 先判断第一级标签
+        for type1_class in class_dict['type1']:
+            if type1_class['name'] == types[0]:
+                target_type1 = type1_class['key']
+                break
+            else:
+                print('没有第一级目标类，该目标类为:%s。请重新训练该类' % types[0])
+                return {
+                    # TODO: compatible to the inference api
+                    'type1': {},
+                    'type2': {},
+                    'type3': {}
+                }
+        # 再判断最后一级标签
+        for last_class in class_dict['type%s' %types_rank]:
+            if last_class['name'] == types[-1]:
+                candidate_class.append(last_class['key'])
+            else:
+                continue
+        if not candidate_class:
+            print('没有目标类，该目标类为:%s。请重新训练该类' % class_name)
+            return {
+                    # TODO: compatible to the inference api
+                    'type1': {},
+                    'type2': {},
+                    'type3': {}
+                } 
+        # 需要一级标签和最终标签判断
+        else:
+            for sub_class in candidate_class:
+                if target_type1 in sub_class:
+                    final_class = sub_class
+                    break
+        # TODO:判断一下这个标签的长度
+            if len(final_class) == 6:
+                return {
+                'type1': {final_class[0:3]: prob},
+                'type2': {final_class[0:6]: prob} 
+                }
+            elif len(final_class) == 9:
+                return {
+                'type1': {final_class[0:3]: prob},
+                'type2': {final_class[0:6]: prob},
+                'type3': {final_class: prob}
+                }
+            elif len(final_class) == 12:
+                return {
+                'type1': {final_class[0:3]: prob},
+                'type2': {final_class[0:6]: prob},
+                'type3': {final_class[0:9]: prob},
+                'type4': {final_class: prob}
+                }
+            else:
+                return {
+                'type1': {final_class[0:3]: prob},
+                'type2': {final_class[0:6]: prob},
+                'type3': {final_class[0:9]: prob},
+                'type4': {final_class[0:12]: prob},
+                'type5': {final_class: prob}
+                }
 
 
-# path = os.path.join(os.path.dirname(__file__), 'library/new_situ_pos.json')
+path = os.path.join(os.path.dirname(__file__), 'library/new_situ_pos.json')
+labelpath = os.path.join(os.path.dirname(__file__), 'library/label.json')
+
 # path_out = os.path.join(os.path.dirname(__file__), 'library/out_situ_pos.json')
-path = './library/new_situ_pos.json'
+# path = './library/new_situ_pos.json'
 content = load_rules(path)
+class_dict = load_rules(labelpath)
 
 
 def update_content(content, online):
@@ -333,4 +387,5 @@ if __name__ == "__main__":
                 {"kname": "不属我所管辖", "type": "overcome"}
             ]
     }
+    result = once_forever(slice_p)
     print("result", once_forever(slice_p, online=online))
