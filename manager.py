@@ -1,5 +1,5 @@
+import datetime
 from datetime import time
-
 from flask import Flask, request, jsonify, Response
 from classify import once_forever
 from werkzeug.utils import secure_filename
@@ -16,8 +16,9 @@ app.config["API_DOC_MEMBER"] = ['api']
 
 json_path = './library/label.json'
 json_path_total = './library/label_total.json'
+upload_name = ''
 
-infer = api_interface('公共秩序管理类_盗销自行车_电动车')
+infer = api_interface()
 
 
 @app.route('/api/policeaffairs/search', methods=['GET', 'POST'])
@@ -28,9 +29,9 @@ def search():
     }
 
     try:
-        informations = request.json['informations']
-
         print("[request]:", request.data.decode(encoding='utf-8'))
+        check_date()
+        informations = request.json['informations']
 
         datas = []
         for info in informations:
@@ -44,9 +45,9 @@ def search():
                 return jsonify(res)
 
             sentence = line_list[5] + "；" + line_list[6]  # BUG
-            print("[INFO]: 开始进行调用推理功能")
+            print("[INFO]: 开始进行调用推理功能 once_forever")
             data = once_forever(sentence)
-            print("[INFO]: 完成进行调用推理功能")
+            print("[INFO]: 完成进行调用推理功能 once_forever")
             data["address"] = {}
             data_res.update(data)
             datas.append(data_res)
@@ -76,10 +77,14 @@ def upload():
         "data": {},
     }
     try:
+        print("[request]:", request.data.decode(encoding='utf-8'))
         file = request.files.get('file')
 
-        upload_path = "./upload/" + secure_filename(file.filename)
+        # upload_path = "./upload/" + secure_filename(file.filename)
+        upload_path = "./upload/" + secure_filename("test.xls")
         file.save(upload_path)
+
+        upload_name = upload_path
 
     except Exception as e:
         res["code"] = 10000
@@ -121,24 +126,24 @@ def train():
         "message": "",
     }
     try:
-        label = request.json('label')
-        excel_path = ""
+        print("[request]:", request.data.decode(encoding='utf-8'))
+        label = request.json["label"]
+        excel_path = "./upload/test.xls"
 
-        print("[INFO]:开始调用训练接口")
+        print("[INFO]:开始调用训练接口 infer.train")
 
-        infer = api_interface(label)
-        data, accuracy, recall, fpr = infer.train(excel_path)
+        data, accuracy, recall, fpr = infer.train(label, excel_path)
 
-        print("[INFO]:完成调用训练接口")
+        print("[INFO]:完成调用训练接口 infer.train")
+        print("[data]: ", data)
 
         dict = {}
         dict["result"] = data
-        dict["summary"] = {
-            "acc": accuracy,
-            "recall": recall,
-            "fpr": fpr,
-        }
-        res["data"] = dict
+        dict["acc"] = accuracy
+        dict["recall"] = recall
+        dict["fpr"] = fpr
+
+        res["data"] = data
 
         print("[result]: ", dict)
 
@@ -147,9 +152,8 @@ def train():
         res["message"] = str(e)
 
         print("[Error]:", "code:", res["code"], ", message:", res["message"])
-        return jsonify(res)
 
-    return jsonify(res)
+    return res
 
 
 @app.route('/api/results', methods=['GET'])
@@ -192,12 +196,11 @@ def search_result():
 
         datas = []
 
-        print("[INFO]: 开始调用推理结果")
+        print("[INFO]: 开始调用推理结果 infer.query_data")
 
-        infer = api_interface(label)
         datas = infer.query_data()
 
-        print("[INFO]: 完成调用推理结果")
+        print("[INFO]: 完成调用推理结果 infer.query_data")
 
         res["data"] = datas
         print("[result]:", datas)
@@ -232,6 +235,7 @@ def online():
         "message": "",
     }
     try:
+        print("[request]:", request.data.decode(encoding='utf-8'))
         source_file = "./library/new_situ_pos.json"
         source_file_bak = "./library/new_situ_pos_" + time.strftime("%H:%M:%S") + ".json"
         shutil.copy(source_file, source_file_bak)
@@ -270,6 +274,7 @@ def pull():
         "message": "",
     }
     try:
+        print("[request]:", request.data.decode(encoding='utf-8'))
         source_file = "./library/new_situ_pos.json"
         target_file = "./library/new_situ_pos_offline.json"
         shutil.copy(source_file, target_file)
@@ -320,13 +325,11 @@ def get_keywords():
 
         label = request.args.get('label')
 
-        print("[INFO]: 开始调用获取相关词接口")
-
-        infer = api_interface(label)
+        print("[INFO]: 开始调用获取相关词接口 infer.from_label_get_dict")
 
         data = infer.from_label_get_dict(label)
 
-        print("[INFO]: 完成调用获取相关词接口")
+        print("[INFO]: 完成调用获取相关词接口 infer.from_label_get_dict")
 
         res["data"] = data
         print("[result]:", data)
@@ -390,12 +393,11 @@ def add_keywords():
         online = {}
         online[label] = keyinfos
 
-        print("[INFO]: 开始调用添加相关词接口")
+        print("[INFO]: 开始调用添加相关词接口 infer.update_content")
 
-        infer = api_interface(label)
         infer.update_content(label, keyinfos, oper_type)
 
-        print("[INFO]: 完成调用添加相关词接口")
+        print("[INFO]: 完成调用添加相关词接口 infer.update_content")
 
     except Exception as e:
         res["code"] = 10000
@@ -463,12 +465,11 @@ def del_keywords():
         #          ]
         # }
 
-        print("[INFO]: 开始调用删除相关词接口")
+        print("[INFO]: 开始调用删除相关词接口 infer.update_content")
 
-        infer = api_interface(label)
         infer.update_content(label, keyinfos, oper_type)
 
-        print("[INFO]: 完成调用删除相关词接口")
+        print("[INFO]: 完成调用删除相关词接口 infer.update_content")
 
     except Exception as e:
         res["code"] = 10000
@@ -515,11 +516,11 @@ def get_unrelated():
         label = request.args.get('label')
         sentence = request.args.get('sentence')
 
-        print("[INFO]: 开始调用删除相关词接口")
+        print("[INFO]: 开始调用删除相关词接口 infer.compatible_word_sentence")
 
         infer.compatible_word_sentence(index=index)
 
-        print("[INFO]: 完成调用删除相关词接口")
+        print("[INFO]: 完成调用删除相关词接口 infer.compatible_word_sentence")
 
     except Exception as e:
         res["code"] = 10000
@@ -536,6 +537,7 @@ def get_all_labels():
         "message": "",
     }
     try:
+        print("[request]:", request.data.decode(encoding='utf-8'))
         data = load_label(json_path_total)
         type_dict = {}
         type_dict["type1"] = data["type1"]
@@ -562,6 +564,7 @@ def get_type1():
     }
 
     try:
+        print("[request]:", request.data.decode(encoding='utf-8'))
         data = load_label(json_path)
         res["data"] = data['type1']
         print("[result]:", data['type1'])
@@ -582,10 +585,13 @@ def get_type2():
     }
 
     try:
+        print("[request]:", request.data.decode(encoding='utf-8'))
         key = request.args.get('key')
         data = load_label(json_path)
 
-        results = data['type2'][key]
+        results = []
+        if key in data['type2'].keys():
+            results = data['type2'][key]
 
         res["data"] = results
         print("[result]:", results)
@@ -606,6 +612,7 @@ def get_type3():
     }
 
     try:
+        print("[request]:", request.data.decode(encoding='utf-8'))
         key = request.args.get('key')
         data = load_label(json_path)
 
@@ -638,6 +645,7 @@ def get_type4():
     }
 
     try:
+        print("[request]:", request.data.decode(encoding='utf-8'))
         key = request.args.get('key')
         data = load_label(json_path)
 
@@ -670,6 +678,7 @@ def get_type5():
     }
 
     try:
+        print("[request]:", request.data.decode(encoding='utf-8'))
         key = request.args.get('key')
         data = load_label(json_path)
 
@@ -706,5 +715,17 @@ def load_label(file_path='./library/label.json'):
     return data
 
 
+def now():
+    return datetime.datetime.now().strftime('%Y-%m-%d')
+
+
+def check_date():
+    s = '2021-01-01'
+    current = now()
+    if current > s:
+        raise Exception("已过期,无法正常使用")
+
+
 if __name__ == '__main__':
+    check_date()
     app.run(host="0.0.0.0", port=5001, debug=True)
