@@ -17,8 +17,8 @@ class api_interface():
     def __init__(self):
         
         
-        # self.jsonpath = os.path.join(os.path.dirname(__file__), 'library/new_situ_pos.json')
-        self.jsonpath = './library/new_situ_pos.json'
+        self.jsonpath = os.path.join(os.path.dirname(__file__), 'library/new_situ_pos.json')
+        # self.jsonpath = './library/new_situ_pos.json'
         self.content = {}
         self.load_json()
 
@@ -92,7 +92,7 @@ class api_interface():
         '''
         self.type1, self.type2, self.type3, _ = label.split("_")
         self.type2_3 = "_".join(label.split("_")[1:3])
-        
+
         sheet = pd.read_excel(excel_path)
         excel_header = sheet.columns.tolist()
         print(excel_header)
