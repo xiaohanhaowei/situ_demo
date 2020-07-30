@@ -18,7 +18,8 @@ class api_interface():
         self.type1, self.type2, self.type3 = label.split("_")
         self.type2_3 = "_".join(label.split("_")[1:3])
         
-        self.jsonpath = os.path.join(os.path.dirname(__file__), 'library/new_situ_pos.json')
+        # self.jsonpath = os.path.join(os.path.dirname(__file__), 'library/new_situ_pos.json')
+        self.jsonpath = './library/new_situ_pos.json'
         self.content = {}
         self.load_json()
 
@@ -26,44 +27,6 @@ class api_interface():
         with open(self.jsonpath, 'r', encoding="utf-8") as json_file:
             self.content = json.load(json_file)
 
-    def update_content(self, online):
-        '''
-        @Author: qikun.zhang
-        @date: 2020-07-29
-        @func: 
-        @args: 
-            content: json instance that need update
-            online: the manually updated content that need to update to the json instance
-            operation: string type, either 'del' or 'add'
-        @return: 
-        @raise: 
-        '''
-        newdict = dict()
-        for type1_type2_type3, word_list, operation in online.items():
-            if "_" not in type1_type2_type3:
-                print("The type label is not right : 'type1_type2_type3'")
-                continue
-            type2_3 = "_".join(type1_type2_type3.split("_")[1:3])
-            
-            subdict = dict()
-            for wd in word_list:
-                keyword = wd.get("kname", "")
-                simword = wd.get("name", "")
-                type_ = wd.get("type", "")
-                if keyword not in subdict:
-                    subdict[keyword] = list()
-                    subdict[keyword].append(keyword)
-                    if simword:
-                        subdict[keyword].append(simword)
-                else:
-                    if simword:
-                        subdict[keyword].append(simword)
-                if type_ not in subdict:
-                    subdict[type_] = list()
-                    subdict[type_].append(keyword)
-                else:
-                    subdict[type_].append(keyword)
-            newdict[type2_3] = subdict
 
     # 根据label 获取对应字典
     def from_label_get_dict(self, type1_type2_=""):
@@ -78,8 +41,21 @@ class api_interface():
 
     # 根据online 数据 增删本地json数据
     def update_content(self, type1_type2_="", wordlist=[], sign=""):
+        '''
+        @Author: qikun.zhang
+        @date: 2020-07-29
+        @func:
+        @args:
+            content: json instance that need update
+            online: the manually updated content that need to update to the json instance
+            operation: string type, either 'del' or 'add'
+        @return:
+        @raise:
+        '''
         if "_" in type1_type2_:
             type2_ = "_".join(type1_type2_.split("_")[1:])
+            if type2_ not in self.content:
+                self.content[type2_] = {}
             subdict = self.content.get(type2_, {})
             for w, worddict in enumerate(wordlist):
                 word = worddict.get("kname", "")
@@ -94,7 +70,8 @@ class api_interface():
                     words = subdict[type_]
                     if sign == "add" and word:
                         words.append(word)
-                    elif sign == "del" and word in words and type_ == "overcome":
+                    # elif sign == "del" and word in words and type_ == "overcome":
+                    elif sign == "del" and word in words:
                         words.remove(word)
                     subdict[type_] = list(set(words))
                     self.content[type2_] = subdict
@@ -158,7 +135,6 @@ class api_interface():
         accuracy, recall, fpr = self.percision_cal(compatible_count)
         return self.new_sheet, accuracy, recall, fpr
 
-
     def percision_cal(self, count):
         '''
         @Author: hongwei.wang
@@ -207,6 +183,7 @@ class api_interface():
 
     def compatible_word_sentence(self, label, index):
         return list(self.new_sheet.loc[index, 'reason'])
+
 
 if __name__ == "__main__":
     # api_interface()

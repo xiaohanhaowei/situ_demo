@@ -161,8 +161,9 @@ def extract_class(class_name, prob):
         }
 
 
-path = os.path.join(os.path.dirname(__file__), 'library/new_situ_pos.json')
+# path = os.path.join(os.path.dirname(__file__), 'library/new_situ_pos.json')
 # path_out = os.path.join(os.path.dirname(__file__), 'library/out_situ_pos.json')
+path = './library/new_situ_pos.json'
 content = load_rules(path)
 
 

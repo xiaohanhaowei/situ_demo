@@ -17,7 +17,6 @@ def search():
 
     try:
         informations = request.json['informations']
-        topN = request.json["topN"]
 
         logger.info(request.data.decode(encoding='utf-8'))
 
@@ -48,7 +47,3 @@ def search():
             res["message"] = str(e)
 
     return jsonify(res)
-
-
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=9100, debug=False)

@@ -1,5 +1,8 @@
-./build
-./dist
-./__pycache__
-./common/__pycache__
-
+build
+dist
+.idea
+lynsys.spec
+__pycache__
+upload
+manager.spec
+common/__pycache__
