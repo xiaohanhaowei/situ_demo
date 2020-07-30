@@ -16,7 +16,10 @@ import pandas as pd
 
 class api_interface(object):
     def __init__(self):
-        self.jsonpath = os.path.join(os.path.dirname(__file__), 'library/new_situ_pos.json')
+        # self.jsonpath = os.path.join(os.path.dirname(__file__), 'library/new_situ_pos.json')
+        # self.labelpath = os.path.join(os.path.dirname(__file__), 'library/label.json')
+        self.jsonpath = './library/new_situ_pos.json'
+        self.content = {}
         self.content = self.load_json(self.jsonpath)
 
     def load_json(self, path):
@@ -127,15 +130,15 @@ class api_interface(object):
         self.new_sheet.to_excel('./result.xls')
         accuracy, recall, fpr = self.percision_cal(compatible_count)
         # return self.new_sheet, accuracy, recall, fpr
-        return {'data': self.new_sheet.to_json(),
-            'indict': {
-                'len': self.new_sheet.shape[0],
-                'correct': compatible_count,
-                'accuracy': accuracy,
-                'recall': recall,
-                'fpr': fpr
-            }
-        }
+        return {'data': self.new_sheet.to_json(force_ascii=False),
+                'indict': {
+                    'len': self.new_sheet.shape[0],
+                    'correct': compatible_count,
+                    'accuracy': accuracy, 
+                    'recall': recall, 
+                    'fpr': fpr
+                    }
+                }
 
     def percision_cal(self, count):
         '''

@@ -132,20 +132,12 @@ def train():
 
         print("[INFO]:开始调用训练接口 infer.train")
 
-        data, accuracy, recall, fpr = infer.train(label, excel_path)
+        data = infer.train(label, excel_path)
 
-        print("[INFO]:完成调用训练接口 infer.train")
+        print("[INFO]:完成调用训练接口 infer.train 参数：label，", label)
         print("[data]: ", data)
 
-        dict = {}
-        dict["result"] = data
-        dict["acc"] = accuracy
-        dict["recall"] = recall
-        dict["fpr"] = fpr
-
         res["data"] = data
-
-        print("[result]: ", dict)
 
     except Exception as e:
         res["code"] = 10000
@@ -153,7 +145,7 @@ def train():
 
         print("[Error]:", "code:", res["code"], ", message:", res["message"])
 
-    return res
+    return response(res)
 
 
 @app.route('/api/results', methods=['GET'])
