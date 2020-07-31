@@ -165,6 +165,8 @@ def search_result():
     |    label    |    false    |    string  |    标签    |
     |    appraise    |    false    |    string  |    推理评价    |
     |    resultType    |    false    |    string  |    推理结果    |
+    |    pageIndex    |    false    |    int  |    索引页    |
+    |    pageSize    |    false    |    int  |    推理结果    |
 
     #### example
 
@@ -190,12 +192,16 @@ def search_result():
         label = request.args.get('label')
         appraise = request.args.get('appraise')
         result_type = request.args.get('resultType')
+        pageIndex = int(request.args.get('pageIndex'))
+        pageSize = int(request.args.get('pageSize'))
 
         datas = []
 
         print("[INFO]: 开始调用推理结果 infer.query_data")
 
-        datas = infer.query_data()
+        page = (pageIndex -1) * pageSize
+
+        datas = infer.obtain_sheet_slice(page, pageSize)
 
         print("[INFO]: 完成调用推理结果 infer.query_data")
 
@@ -246,7 +252,6 @@ def online():
         res["message"] = str(e)
 
         print("[Error]:", "code:", res["code"], ", message:", res["message"])
-        return jsonify(res)
 
     return jsonify(res)
 
