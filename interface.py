@@ -173,8 +173,9 @@ class api_interface(object):
         # TN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
         # FN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == self.type2)
         accuracy = float(float((TP + TN) / total))
-        recall = float(TP / len(new_sheet[excel_header[3]] == self.type2))
-        fpr = 0 if len(new_sheet[excel_header[3]] != self.type2) == 0 else float(FN / len(new_sheet[excel_header[3]] != self.type2))
+        recall = float(TP / (TP + FN))
+        # fpr = 0 if len(new_sheet[excel_header[3]] != self.type2) == 0 else float(FN / len(new_sheet[excel_header[3]] != self.type2))
+        fpr = 0 if (FP + TN) == 0 else float(FP / (FP + TN))
         return accuracy, recall, fpr
 
     def query_data(self):
