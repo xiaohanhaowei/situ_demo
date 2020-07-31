@@ -307,6 +307,7 @@ labelpath = './library/label.json'
 
 # path_out = os.path.join(os.path.dirname(__file__), 'library/out_situ_pos.json')
 # path = './library/new_situ_pos.json'
+global content 
 content = load_rules(path)
 class_dict = load_rules(labelpath)
 
@@ -367,13 +368,14 @@ def update_content(content, online):
         return content
 
 
-def once_forever(sentence, online={}):
-    new_content = content
-    if online:
-        print("start update online data!")
-        new_content = update_content(content, online)
+def update_lib():
+    global content
+    content = load_rules(path)
+
+
+def once_forever(sentence):
     slice_p = check_rules(sentence)
-    one_hot_dict = single_detect(new_content, slice_p)
+    one_hot_dict = single_detect(content, slice_p)
     target_class, prob = extract_one_hot_class(one_hot_dict)
     #  extract_class(target_class, prob)
     return extract_class(target_class, prob)
@@ -480,4 +482,4 @@ if __name__ == "__main__":
             ]
     }
     result = once_forever(slice_p)
-    print("result", once_forever(slice_p, online=online))
+    print("result", once_forever(slice_p))
