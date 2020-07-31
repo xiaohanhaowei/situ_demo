@@ -1,6 +1,6 @@
 import datetime
 from datetime import time
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, Response, render_template
 from classify import once_forever
 from werkzeug.utils import secure_filename
 from interface import api_interface
@@ -8,7 +8,8 @@ import json
 from flask_docs import ApiDoc
 import shutil
 
-app = Flask(__name__)
+# app = Flask(__name__)
+app = Flask(__name__, static_folder='./static', static_url_path='', template_folder='./static')
 
 ApiDoc(app)
 app.config["API_DOC_MEMBER"] = ['api']
@@ -18,6 +19,11 @@ json_path_total = './library/label_total.json'
 upload_name = ''
 
 infer = api_interface()
+
+
+@app.route('/', methods=['GET'])
+def home():
+    return render_template('index.html')
 
 
 @app.route('/api/policeaffairs/search', methods=['GET', 'POST'])
