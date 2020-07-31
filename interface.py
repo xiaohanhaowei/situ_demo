@@ -157,7 +157,8 @@ class api_interface(object):
         total = new_sheet.shape[0]
         excel_header = new_sheet.columns.tolist()
         ee = new_sheet[excel_header[3]].tolist()  # 实际的
-        ff = list(map(lambda x: x.split('_')[0], new_sheet[excel_header[6]].tolist()))  # 推理的
+        # print(new_sheet[excel_header[6]].tolist())
+        ff = list(map(lambda x: x.split('_')[0] if '_' not in x else x.split('_')[1], new_sheet[excel_header[6]].tolist()))  # 推理的
         
         gg = [self.type2 for data in new_sheet[excel_header[3]]]
         tt = list(map(lambda x, y: x == y, ee, gg))  # 实际为真

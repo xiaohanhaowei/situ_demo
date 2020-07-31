@@ -136,7 +136,7 @@ def single_detect(content, single_slice):
                 else:
                     # 判断该条是否确切在含有动词，或者词组，如果有就是，没有就是其他。
                     verb_grp = copy.deepcopy(content[correspond_class]['verb'])
-                    verb_grp.extend(content[correspond_class]['group'])
+                    verb_grp.extend(content[correspond_class].get('group', []))
                     # FIXME: need to judge if the 'verb_grp' list is null
                     for verb in verb_grp:
                         if verb in single_slice:

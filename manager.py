@@ -1,7 +1,7 @@
 import datetime
 from datetime import time
 from flask import Flask, request, jsonify, Response, render_template
-from classify import once_forever
+from classify import once_forever, update_lib
 from werkzeug.utils import secure_filename
 from interface import api_interface
 import json
@@ -239,6 +239,8 @@ def online():
         offline_file = "./library/new_situ_pos_offline.json"
         shutil.copy(offline_file, source_file)
 
+        update_lib()
+
     except Exception as e:
         res["code"] = 10000
         res["message"] = str(e)
@@ -275,6 +277,8 @@ def pull():
         source_file = "./library/new_situ_pos.json"
         target_file = "./library/new_situ_pos_offline.json"
         shutil.copy(source_file, target_file)
+
+        update_lib()
 
     except Exception as e:
         res["code"] = 10000
