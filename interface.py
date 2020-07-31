@@ -260,7 +260,6 @@ class api_interface(object):
         @return: 
         @raise: 
         '''
-        import pdb; pdb.set_trace()
         slice_sheet = self.new_sheet[index: index + interval]
         return slice_sheet.to_json(force_ascii=False)      
 

@@ -216,8 +216,8 @@ def search_result():
     return jsonify(res)
 
 
-@app.route('/api/online', methods=['POST'])
-def online():
+@app.route('/api/online/list', methods=['GET'])
+def online_list():
     """上线
 
     @@@
@@ -239,13 +239,73 @@ def online():
     }
     try:
         print("[request]:", request.data.decode(encoding='utf-8'))
+
+        print("开始获取上线标签, ")
+
+        data = infer.extract_class_timestamp()
+
+        print("完成获取上线标签, ")
+
+        res["data"] = data
+
+    except Exception as e:
+        res["code"] = 10000
+        res["message"] = str(e)
+
+        print("[Error]:", "code:", res["code"], ", message:", res["message"])
+
+    return jsonify(res)
+
+
+@app.route('/api/online', methods=['POST'])
+def online():
+    """上线
+
+    @@@
+    #### body参数[json格式]
+
+    | args | nullable | type | remark |
+    |--------|--------|--------|--------|
+    |    label    |    false    |    string  |    标签    |
+
+    #### example
+
+    #### return
+    - ##### json
+    {"message": "", "code": 0}
+
+    #### example
+    ```
+
+    ```
+    @@@
+    """
+    res = {
+        "code": 0,
+        "message": "",
+    }
+    try:
+        print("[request]:", request.data.decode(encoding='utf-8'))
+
+        label = request.json["label"]
+
         source_file = "./library/new_situ_pos.json"
-        source_file_bak = "./library/new_situ_pos_" + datetime.datetime.now().strftime("%y-%m-%d-%H-%M-%S") + ".json"
+        source_file_bak = "./library/new_situ_pos_" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + ".json"
         shutil.copy(source_file, source_file_bak)
         offline_file = "./library/new_situ_pos_offline.json"
         shutil.copy(offline_file, source_file)
 
+        print("开始重新加载线上库")
         update_lib()
+        print("完成重新加载线上库")
+        # 更新时间
+        print("开始更新标签时间")
+
+        time_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        infer.update_class_timestamp(label, time_str)
+
+        print("完成更新标签时间")
 
     except Exception as e:
         res["code"] = 10000
