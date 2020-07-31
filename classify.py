@@ -156,6 +156,8 @@ def single_detect(content, single_slice):
 def single_detect_for_analyse(content, target_label, single_slice):
     if single_slice == None:
         return '其他', 'no_content'
+    elif target_label not in content.keys():
+        raise KeyError('库中没有%s标签，请先训练' % target_label)
     else:
 
         not_in = 0

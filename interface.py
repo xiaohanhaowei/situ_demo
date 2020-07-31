@@ -81,7 +81,8 @@ class api_interface(object):
         @return: 
         @raise: 
         '''
-        self.type1, self.type2, self.type3 = label.split("_")[0:3]
+        length = len(label.split('_'))
+        self.type1, self.type2 = label.split("_")[0:2]
         # self.type2_3 = "_".join(label.split("_")[1:3])
 
         sheet = pd.read_excel(excel_path)
@@ -219,4 +220,4 @@ if __name__ == "__main__":
     #     sign="del")
 
     # my test
-    print(infer.train("公共秩序管理类_盗销自行车_电动车", './test.xls'))
+    print(infer.train("公共秩序管理类_医院号贩子", './test.xls'))
