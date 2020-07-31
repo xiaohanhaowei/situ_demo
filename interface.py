@@ -71,6 +71,35 @@ class api_interface(object):
         else:
             print("type1_type2_ is %s, can not find in library" % type1_type2_)
 
+
+    def update_class_timestamp(self, target_class, t_str):
+        '''
+        @Author: hongwei.wang
+        @date: 2020-07-31 16:42:24
+        @func: 
+        @args: 
+            target_class:
+            t_str:       time stamp correspond to the 'y-m-d h:m:s'
+        @return: 
+        @raise: 
+        '''
+        sub_dict = self.content.get(target_class, {})
+        sub_dict['time'] = t_str
+        self.content[target_class] = sub_dict
+        with open(self.jsonpath, 'w', encoding="utf-8") as json_out:
+            json.dump(self.content, json_out, ensure_ascii=False, indent=2)
+
+    
+    def extract_class_timestamp(self):
+        online_dict = {}
+        keys = list(self.content.keys())
+        for sub_class in keys:
+            timestamp = self.content[sub_class].get('time', '')
+            if timestamp != '':
+                online_dict[sub_class] = timestamp   
+        return online_dict        
+
+
     # added by hongwei.wang
     def train(self, label, excel_path):
         '''
@@ -140,6 +169,7 @@ class api_interface(object):
                     }
                 }
 
+
     def percision_cal(self, count):
         '''
         @Author: hongwei.wang
@@ -178,6 +208,7 @@ class api_interface(object):
         fpr = 0 if (FP + TN) == 0 else float(FP / (FP + TN))
         return accuracy, recall, fpr
 
+
     def query_data(self):
         '''
         @Author: hongwei.wang
@@ -188,6 +219,7 @@ class api_interface(object):
         @raise: 
         '''
         return self.new_sheet
+
 
     def compatible_word_sentence(self, label, index):
         return list(self.new_sheet.loc[index, 'reason'])
@@ -202,14 +234,15 @@ class api_interface(object):
         @return: 
         @raise: 
         '''
-        slice_sheet = self.new_sheet[index: index+interval]
+        import pdb; pdb.set_trace()
+        slice_sheet = self.new_sheet[index: index + interval]
         return slice_sheet.to_json(force_ascii=False)      
 
 
 if __name__ == "__main__":
     # api_interface()
     infer = api_interface()
-    print("infer.content", infer.content)
+    # print("infer.content", infer.content)
 
     # kun's test
     # print("from_label_get_dict", infer.from_label_get_dict("公共秩序管理类_盗销自行车_电动车"))
@@ -235,4 +268,6 @@ if __name__ == "__main__":
     #     sign="del")
 
     # my test
-    print(infer.train("公共秩序管理类_医院号贩子", './test.xls'))
+    print(infer.extract_class_timestamp())
+    # infer.update_class_timestamp("公共秩序管理类_盗销自行车_电动车", '2020-07-31 16:53:58')
+    # print(infer.train("公共秩序管理类_医院号贩子", './test.xls'))
