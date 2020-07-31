@@ -181,7 +181,7 @@ class api_interface(object):
     def query_data(self):
         '''
         @Author: hongwei.wang
-        @date: ${date (Ctrl+Shift+I)}
+        @date: 2020-07-31
         @func: 
         @args: 
         @return: 
@@ -191,6 +191,19 @@ class api_interface(object):
 
     def compatible_word_sentence(self, label, index):
         return list(self.new_sheet.loc[index, 'reason'])
+
+
+    def obtain_sheet_slice(self, index, interval):
+        '''
+        @Author: hongwei.wang
+        @date: 2020-07-31
+        @func: 
+        @args: 
+        @return: 
+        @raise: 
+        '''
+        slice_sheet = self.new_sheet[index: index+interval]
+        return slice_sheet.to_json(force_ascii=False)      
 
 
 if __name__ == "__main__":
