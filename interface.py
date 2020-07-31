@@ -12,7 +12,8 @@ import os
 
 import classify
 import pandas as pd
-
+import datetime
+from collections import OrderedDict
 
 class api_interface(object):
     def __init__(self):
@@ -20,11 +21,36 @@ class api_interface(object):
         # self.labelpath = os.path.join(os.path.dirname(__file__), 'library/label.json')
         self.jsonpath = './library/new_situ_pos_offline.json'
         self.content = self.load_json(self.jsonpath)
+        self.json_online = './library/new_situ_pos_online.json'
+        self.data_online = OrderedDict()
+        self.load_online()
 
+    # 加载json
     def load_json(self, path):
         with open(path, 'r', encoding="utf-8") as json_file:
             content = json.load(json_file)
         return content
+
+    # 加载已上线数据
+    def load_online(self):
+        if os.path.exists(self.json_online):
+            self.data_online = self.load_json(self.json_online)
+
+    # 保存数据到json
+    def dump_json(self):
+        with open(self.json_online, 'w', encoding="utf-8") as json_file:
+            json.dump(self.data_online, json_file, ensure_ascii=False, indent=2)
+
+    # 线上数据类别更新，同步online json
+    def update_online(self, type1_type2_="", time=""):
+        if type1_type2_:
+            self.data_online[type1_type2_] = self.content.get(type1_type2_, {})
+            self.data_online[type1_type2_]["time"] = time if time else datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+            self.dump_json()
+
+    # 获取已上线的标签和时间
+    def update_label_time(self):
+        return OrderedDict((key, subdict.get("time", "")) for key, subdict in self.data_online.items())
 
     # 根据label 获取对应字典
     def from_label_get_dict(self, type1_type2_=""):
@@ -35,7 +61,7 @@ class api_interface(object):
         return get_dict
 
     # 根据online 数据 增删本地json数据
-    def update_content(self, type1_type2_="", wordlist=[], sign=""):
+    def update_content(self, type1_type2_="", wordlist=[], sign="", time=""):
         '''
         @Author: qikun.zhang
         @date: 2020-07-29
@@ -64,7 +90,7 @@ class api_interface(object):
                     words.remove(word)
                 # 去重
                 subdict[type_] = list(set(words))
-
+            subdict["time"] = time if time else datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
             self.content[type1_type2_] = subdict
             with open(self.jsonpath, 'w', encoding="utf-8") as json_out:
                 json.dump(self.content, json_out, ensure_ascii=False, indent=2)
@@ -266,6 +292,12 @@ if __name__ == "__main__":
     #     type1_type2_="公共秩序管理类_盗销自行车_电动车",
     #     wordlist=[{"kname": "山地车####", "type": "noun"}],
     #     sign="del")
+    #
+    # infer.update_online(type1_type2_="公共秩序管理类_盗销自行车_电动车")
+    # infer.update_online(type1_type2_="公共秩序管理类_盗销自行车_自行车")
+    print("update label and time", infer.update_label_time())
+
+
 
     # my test
     print(infer.extract_class_timestamp())
