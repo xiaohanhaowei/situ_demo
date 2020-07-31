@@ -112,9 +112,9 @@ class api_interface(object):
             else:
 
                 result, reason = classify.single_detect_for_analyse(self.content, label, sentence)
-                if result.split('_')[1] == self.type2 and sub_data[19] == self.type2:
-                    compatible_count += 1 
-            
+                if '_' in result:
+                    if result.split('_')[1] == self.type2 and sub_data[19] == self.type2:
+                        compatible_count += 1 
             new_data.append(result)
             reason_list.append(reason)
         # sheet['result'] = pd.Series(new_data)
