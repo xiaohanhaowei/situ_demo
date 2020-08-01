@@ -147,9 +147,17 @@ class api_interface(object):
         data = sheet.values
         new_data = list()
         reason_list = list()
+        real_data_list = list()
+        eval_list = list()
         compatible_count = 0
         for sub_data in data:
             sub_data_content = []
+            valid_lable = list(map(lambda x: str(x), sub_data[18:].tolist()))
+            valid_lable = list(set(valid_lable).remove('nan'))
+            if '_'.join(valid_lable[:]) not in label:
+                sub_real_data = '其他'
+            else:
+                sub_real_data = label
             for i in range(2):
                 if str(sub_data[5 + i]) == 'nan':
                     break
@@ -170,19 +178,33 @@ class api_interface(object):
                 if '_' in result:
                     if result.split('_')[1] == self.type2 and sub_data[19] == self.type2:
                         compatible_count += 1 
+            if '_' in result: # the result is only the name of label
+                if sub_real_data == label: 
+                    eval = 'True'
+                else:
+                    eval = 'False'
+            else: #其他
+                if  sub_real_data: 
+                    eval = 'False'
+                else:
+                    eval = 'True'
             new_data.append(result)
             reason_list.append(reason)
+            real_data_list.append(sub_real_data)
+            eval_list.append(eval)
         # sheet['result'] = pd.Series(new_data)
         # sheet['reason'] = pd.Series(reason_list)
 
         sheet.insert(ncols, "result", new_data)
-        sheet.insert(ncols, 'reason', reason_list)
-        # sheet.to_excel('./result-%s.xls' % excel_path.split('.xls')[0].split('/')[-1], index=False)
+        sheet.insert(ncols+1, "evaluate", eval_list)
+        sheet.insert(ncols+2, "reason", reason_list)
+        sheet.insert(ncols+3, 'real_data', real_data_list)
+        # sheet.to_excel('./static/result-%s.xls' % excel_path.split('.xls')[0].split('/')[-1], index=False)
         self.new_sheet = pd.DataFrame(sheet,
             columns=[excel_header[5], excel_header[6], excel_header[18], excel_header[19], excel_header[20],
-                excel_header[21], 'result', 'reason'])
-        #                                        警情摘要          反馈内容           类别1                类别2             类别3              类别4              类别2_类别3  错因
-        self.new_sheet.to_excel('./result.xls')
+                excel_header[21], 'result', 'evaluate', 'reason', 'real_data'])
+        #                 警情摘要          反馈内容           类别1                类别2             类别3              类别4              类别2_类别3  错因
+        self.new_sheet.to_excel('./static/result.xls')
         accuracy, recall, fpr = self.percision_cal(compatible_count)
         # return self.new_sheet, accuracy, recall, fpr
         return {'data': self.new_sheet.to_json(force_ascii=False),
@@ -206,13 +228,13 @@ class api_interface(object):
         @raise: 
         '''
         new_sheet = self.new_sheet
-        accuracy = 0.93
-        recall = 0.87
-        fpr = 0.2
+        accuracy = 0.
+        recall = 0.
+        fpr = 0.
 
         total = new_sheet.shape[0]
         excel_header = new_sheet.columns.tolist()
-        ee = new_sheet[excel_header[3]].tolist()  # 实际的
+        ee = new_sheet[excel_header[3]].tolist()  # 实际的 FIXME have a bug
         # print(new_sheet[excel_header[6]].tolist())
         ff = list(map(lambda x: x.split('_')[0] if '_' not in x else x.split('_')[1], new_sheet[excel_header[6]].tolist()))  # 推理的
         
@@ -228,10 +250,10 @@ class api_interface(object):
         # FP = len(new_sheet[excel_header[3]] == self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
         # TN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
         # FN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == self.type2)
-        accuracy = float(float((TP + TN) / total))
-        recall = float(TP / (TP + FN))
+        accuracy = float(float((TP + TN) / total))*100
+        recall = float(TP / (TP + FN))*100
         # fpr = 0 if len(new_sheet[excel_header[3]] != self.type2) == 0 else float(FN / len(new_sheet[excel_header[3]] != self.type2))
-        fpr = 0 if (FP + TN) == 0 else float(FP / (FP + TN))
+        fpr = 0 if (FP + TN) == 0 else float(FP / (FP + TN)) * 100
         return accuracy, recall, fpr
 
 
@@ -247,11 +269,29 @@ class api_interface(object):
         return self.new_sheet
 
 
+    def filter_content(self, criterion='all'):
+        '''
+        @Author: hongwei.wang
+        @date: 2020-08-01 15:41:48
+        @func: 
+        @args:
+            criterion: 'all'; 'True'; 'False' 
+        @return: 
+        @raise: 
+        '''
+        if criterion == 'True':
+            return self.new_sheet['evaluate'] == 'True'
+        if criterion == 'False':
+            return self.new_sheet['evaluate'] == 'False'
+        else:
+            return self.new_sheet
+        
+
     def compatible_word_sentence(self, label, index):
         return list(self.new_sheet.loc[index, 'reason'])
 
 
-    def obtain_sheet_slice(self, index, interval):
+    def obtain_sheet_slice(self, index, interval, criterion='all'):
         '''
         @Author: hongwei.wang
         @date: 2020-07-31
@@ -260,7 +300,8 @@ class api_interface(object):
         @return: 
         @raise: 
         '''
-        slice_sheet = self.new_sheet[index: index + interval]
+        new_sheet = self.filter_content(criterion)
+        slice_sheet = new_sheet[index: index + interval]
         return slice_sheet.to_json(force_ascii=False)      
 
 
