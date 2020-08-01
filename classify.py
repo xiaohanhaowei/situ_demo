@@ -190,8 +190,8 @@ def single_detect_for_analyse(content, target_label, single_slice):
                 print('不是 %s' % correspond_class)
                 return '其他', ban  
             # 判断该条是否确切在含有动词，或者词组，如果有就是，没有就是其他。
-            verb_grp = content[correspond_class]['verb']
-            verb_grp.extend(content[correspond_class]['group'])
+            verb_grp = content[correspond_class].get('verb', [])
+            verb_grp.extend(content[correspond_class].get('group', []))
             for verb in verb_grp:
                 if verb in single_slice:
                     print('in %s' % correspond_class)
