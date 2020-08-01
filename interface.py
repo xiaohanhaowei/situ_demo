@@ -180,13 +180,14 @@ class api_interface(object):
                 if '_' in result:
                     if result.split('_')[1] == self.type2 and sub_data[19] == self.type2:
                         compatible_count += 1 
+            import pdb; pdb.set_trace()
             if '_' in result: # the result is only the name of label
                 if sub_real_data == label: 
                     eval = 'True'
                 else:
                     eval = 'False'
             else: #其他
-                if  sub_real_data: 
+                if  sub_real_data == label: 
                     eval = 'False'
                 else:
                     eval = 'True'
@@ -349,6 +350,6 @@ if __name__ == "__main__":
 
 
     # my test
-    print(infer.extract_class_timestamp())
+    # print(infer.extract_class_timestamp())
     # infer.update_class_timestamp("公共秩序管理类_盗销自行车_电动车", '2020-07-31 16:53:58')
-    # print(infer.train("公共秩序管理类_医院号贩子", './test.xls'))
+    print(infer.train("公共秩序管理类_医院号贩子", './test.xls'))
