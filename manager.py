@@ -101,6 +101,34 @@ def upload():
     return jsonify(res)
 
 
+@app.route('/api/download', methods=['POST'])
+def download():
+    """下载文件
+
+    @@@
+
+    @@@
+    """
+    res = {
+        "code": 0,
+        "message": "",
+        "data": {},
+    }
+    try:
+        print("[request]:", request.data.decode(encoding='utf-8'))
+
+        res["data"] = "/result.xls"
+
+    except Exception as e:
+        res["code"] = 10000
+        res["message"] = str(e)
+
+        print("[Error]:", "code:", res["code"], ", message:", res["message"])
+        return jsonify(res)
+
+    return jsonify(res)
+
+
 @app.route('/api/train', methods=['POST'])
 def train():
     """ 训练
@@ -197,13 +225,16 @@ def search_result():
 
         datas = []
 
-        print("[INFO]: 开始调用推理结果 infer.query_data")
+        print("[INFO]: 开始调用推理结果 infer.obtain_sheet_slice")
 
         page = (pageIndex -1) * pageSize
 
-        datas = infer.obtain_sheet_slice(page, pageSize)
+        if result_type is None or result_type == "":
+            result_type = "all"
 
-        print("[INFO]: 完成调用推理结果 infer.query_data")
+        datas = infer.obtain_sheet_slice(page, pageSize, result_type)
+
+        print("[INFO]: 完成调用推理结果 infer.obtain_sheet_slice")
 
         res["data"] = datas
         print("[result]:", datas)

@@ -152,9 +152,11 @@ class api_interface(object):
         compatible_count = 0
         for sub_data in data:
             sub_data_content = []
-            valid_lable = list(map(lambda x: str(x), sub_data[18:].tolist()))
-            valid_lable = list(set(valid_lable).remove('nan'))
-            if '_'.join(valid_lable[:]) not in label:
+            valid_label = list(map(lambda x: str(x), sub_data[18:].tolist()))
+            valid_label_set = set(valid_label)
+            valid_label_set.remove('nan')
+            valid_label = list(valid_label_set)
+            if '_'.join(valid_label[:]) not in label:
                 sub_real_data = '其他'
             else:
                 sub_real_data = label
@@ -205,12 +207,14 @@ class api_interface(object):
                 excel_header[21], 'result', 'evaluate', 'reason', 'real_data'])
         #                 警情摘要          反馈内容           类别1                类别2             类别3              类别4              类别2_类别3  错因
         self.new_sheet.to_excel('./static/result.xls')
-        accuracy, recall, fpr = self.percision_cal(compatible_count)
+
+        accuracy, recall, fpr, indicit_l = self.percision_cal(compatible_count)
+
         # return self.new_sheet, accuracy, recall, fpr
         return {'data': self.new_sheet.to_json(force_ascii=False),
                 'indict': {
-                    'len': self.new_sheet.shape[0],
-                    'correct': compatible_count,
+                    'len': int(self.new_sheet.shape[0]),
+                    'correct': int(indicit_l[0] + indicit_l[2]),
                     'accuracy': accuracy, 
                     'recall': recall, 
                     'fpr': fpr
@@ -243,18 +247,19 @@ class api_interface(object):
         ti = list(map(lambda x, y: x == y, ff, gg))  # 推理为真
 
         TP = sum([x == True and y == True for x, y in zip(tt, ti)])
-        FP = sum([x == True and y == False for x, y in zip(tt, ti)])
+        FP = sum([x == False and y == True for x, y in zip(tt, ti)])
         TN = sum([x == False and y == False for x, y in zip(tt, ti)])
-        FN = sum([x == False and y == True for x, y in zip(tt, ti)])
+        FN = sum([x == True and y == False for x, y in zip(tt, ti)])
         # TP = len(new_sheet[excel_header[3]].tolist() == [self.type2 for data in new_sheet[excel_header[3]]] and list(map(lambda x: x.split('_')[0], new_sheet[excel_header[6]].tolist())) == [self.type2 for data in new_sheet[excel_header[6]]])
         # FP = len(new_sheet[excel_header[3]] == self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
         # TN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
         # FN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == self.type2)
-        accuracy = float(float((TP + TN) / total))*100
-        recall = float(TP / (TP + FN))*100
+
+        accuracy = float(float((TP + TN) / total)) * 100
+        recall = 0 if (TP + FN) == 0 else float(TP / (TP + FN)) * 100
         # fpr = 0 if len(new_sheet[excel_header[3]] != self.type2) == 0 else float(FN / len(new_sheet[excel_header[3]] != self.type2))
         fpr = 0 if (FP + TN) == 0 else float(FP / (FP + TN)) * 100
-        return accuracy, recall, fpr
+        return accuracy, recall, fpr, [TP, FP, TN, FN]
 
 
     def query_data(self):
@@ -280,9 +285,13 @@ class api_interface(object):
         @raise: 
         '''
         if criterion == 'True':
-            return self.new_sheet['evaluate'] == 'True'
+            new_sheet1 = self.new_sheet[self.new_sheet['evaluate'] == 'True']
+            new_sheet1.to_excel('./static/result-true.xls')
+            return new_sheet1
         if criterion == 'False':
-            return self.new_sheet['evaluate'] == 'False'
+            new_sheet1 = self.new_sheet[self.new_sheet['evaluate'] == 'False']
+            new_sheet1.to_excel('./static/result-false.xls')
+            return new_sheet1
         else:
             return self.new_sheet
         
@@ -300,8 +309,8 @@ class api_interface(object):
         @return: 
         @raise: 
         '''
-        new_sheet = self.filter_content(criterion)
-        slice_sheet = new_sheet[index: index + interval]
+        l_new_sheet = self.filter_content(criterion)
+        slice_sheet = l_new_sheet[index: index + interval]
         return slice_sheet.to_json(force_ascii=False)      
 
 
