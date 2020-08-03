@@ -333,6 +333,8 @@ def online():
 
         print("开始重新加载线上库")
         update_lib()
+        infer.update_lib()
+
         print("完成重新加载线上库")
         # 更新时间
         print("开始更新标签时间")
@@ -380,6 +382,8 @@ def pull():
         shutil.copy(source_file, target_file)
 
         update_lib()
+
+        infer.update_lib()
 
     except Exception as e:
         res["code"] = 10000

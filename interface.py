@@ -25,6 +25,9 @@ class api_interface(object):
         self.data_online = OrderedDict()
         self.load_online()
 
+    def update_lib(self):
+        self.content = self.load_json(self.jsonpath)
+
     # 加载json
     def load_json(self, path):
         with open(path, 'r', encoding="utf-8") as json_file:
