@@ -152,7 +152,7 @@ class api_interface(object):
             eval_list = list()
             compatible_count = 0
             if len(data) == 0:
-                raise ValueError('excel表中没有数据，请添加新的excel。')
+                raise ValueError('excel表中没有数据，请添加新的excel!')
             for sub_data in data:
                 sub_data_content = []
                 valid_label = list(map(lambda x: str(x), sub_data[18:].tolist()))
@@ -161,10 +161,15 @@ class api_interface(object):
                     valid_label_set.remove('nan')
                 valid_label_new = list(valid_label_set)
                 valid_label_new.sort(key=valid_label.index)
-                if '_'.join(valid_label_new[:]) not in label:
+                valid_len = len(valid_label_new)
+                # 预防实际标签为空的情况
+                if valid_len < 2:
                     sub_real_data = '其他'
                 else:
-                    sub_real_data = label
+                    if '_'.join(valid_label_new[:]) not in label:
+                        sub_real_data = '其他'
+                    else:
+                        sub_real_data = label
                 for i in range(2):
                     if str(sub_data[5 + i]) == 'nan':
                         break
@@ -253,15 +258,14 @@ class api_interface(object):
         tt = list(map(lambda x, y: x == y, ee, gg))  # 实际为真
         ti = list(map(lambda x, y: x == y, ff, gg))  # 推理为真
 
-        TP = sum([x == True and y == True for x, y in zip(tt, ti)])
-        FP = sum([x == False and y == True for x, y in zip(tt, ti)])
-        TN = sum([x == False and y == False for x, y in zip(tt, ti)])
-        FN = sum([x == True and y == False for x, y in zip(tt, ti)])
+        TP = sum([x == True and y == True for x, y in zip(ti, tt)])
+        TN = sum([x == False and y == False for x, y in zip(ti, tt)])
+        FP = sum([x == True and y == False for x, y in zip(ti, tt)])
+        FN = sum([x == False and y == True for x, y in zip(ti, tt)])
         # TP = len(new_sheet[excel_header[3]].tolist() == [self.type2 for data in new_sheet[excel_header[3]]] and list(map(lambda x: x.split('_')[0], new_sheet[excel_header[6]].tolist())) == [self.type2 for data in new_sheet[excel_header[6]]])
         # FP = len(new_sheet[excel_header[3]] == self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
         # TN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
         # FN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == self.type2)
-
         accuracy = float(float((TP + TN) / total)) * 100
         recall = 0 if (TP + FN) == 0 else float(TP / (TP + FN)) * 100
         # fpr = 0 if len(new_sheet[excel_header[3]] != self.type2) == 0 else float(FN / len(new_sheet[excel_header[3]] != self.type2))

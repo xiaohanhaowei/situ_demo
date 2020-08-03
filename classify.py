@@ -96,6 +96,7 @@ def single_detect_for_bike(content, single_slice):
 def single_detect(content, single_slice):
     one_hot_class_dict = collections.OrderedDict()
     if single_slice == None:
+        print('没有待推理句子')
         return one_hot_class_dict
     else:
         keys = list(content.keys())
@@ -115,41 +116,47 @@ def single_detect(content, single_slice):
                     break
             
             # 如果在里边呢？
-            if not_in == len(cand_nouns):
-                not_in = 0
+            if len(cand_nouns) == 0:
+                print("结果为空，相关名词为空")
                 one_hot_class_dict.update({'{}'.format(sub_key): 0})
-                # prob = rd.uniform(0.0, 0.1)
-                # return '其他', prob
             else:
-                # 进入下一层: 看是否不符合相管目标类警情
-                for ban in sorted(content[correspond_class]['overcome'], key=lambda x: len(x), reverse=True):
-                    if ban in single_slice:
-                        print("ban", ban)
-                        ban_in = True
-                        break
-                    else:
-                        continue
-                if ban_in:
-                    ban_in = False
-                    print('不是 %s' % correspond_class)
-                    one_hot_class_dict.update({'{}'.format(correspond_class): 0})
+                if not_in == len(cand_nouns):
+                    not_in = 0
+                    print("句子中没有相关名词")
+                    one_hot_class_dict.update({'{}'.format(sub_key): 0})
+                    # prob = rd.uniform(0.0, 0.1)
+                    # return '其他', prob
                 else:
-                    # 判断该条是否确切在含有动词，或者词组，如果有就是，没有就是其他。
-                    verb_grp = copy.deepcopy(content[correspond_class]['verb'])
-                    verb_grp.extend(content[correspond_class].get('group', []))
-                    # FIXME: need to judge if the 'verb_grp' list is null
-                    for verb in verb_grp:
-                        if verb in single_slice:
-                            print('in %s' % correspond_class)
-                            verb_in = True
-                            one_hot_class_dict.update({'{}'.format(sub_key): 1})
+                    # 进入下一层: 看是否不符合相管目标类警情
+                    for ban in sorted(content[correspond_class]['overcome'], key=lambda x: len(x), reverse=True):
+                        if ban in single_slice:
+                            print("ban", ban)
+                            ban_in = True
                             break
                         else:
                             continue
-                    if verb_in is True:
-                        verb_in = False
+                    if ban_in:
+                        ban_in = False
+                        print('不是 %s' % correspond_class)
+                        one_hot_class_dict.update({'{}'.format(correspond_class): 0})
                     else:
-                        one_hot_class_dict.update({'{}'.format(sub_key): 0})
+                        # 判断该条是否确切在含有动词，或者词组，如果有就是，没有就是其他。
+                        verb_grp = copy.deepcopy(content[correspond_class].get('verb', []))
+                        verb_grp.extend(content[correspond_class].get('group', []))
+                        # FIXME: need to judge if the 'verb_grp' list is null
+                        for verb in verb_grp:
+                            if verb in single_slice:
+                                print('in %s, verb is %s' % (correspond_class, verb))
+                                verb_in = True
+
+                                one_hot_class_dict.update({'{}'.format(sub_key): 1})
+                                break
+                            else:
+                                continue
+                        if verb_in is True:
+                            verb_in = False
+                        else:
+                            one_hot_class_dict.update({'{}'.format(sub_key): 0})
         
                 # if there is no element that in verb_grp is compatible to single_slice, what should do?
         return one_hot_class_dict
