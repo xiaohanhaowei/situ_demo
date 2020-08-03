@@ -261,8 +261,6 @@ class api_interface(object):
         dd = list(map(str_list, dd))
         cc = ['_'.join(x) for x in dd] #
         label_num = [x in y for x,y in zip(hh, cc)].count(True)
-        import pdb
-        pdb.set_trace()
 
         # print(new_sheet[excel_header[6]].tolist())
         ff = list(map(lambda x: x.split('_')[0] if '_' not in x else x.split('_')[1], new_sheet[excel_header[6]].tolist()))  # 推理的
