@@ -138,6 +138,7 @@ class api_interface(object):
         '''
         try:
             length = len(label.split('_'))
+            self.label = label
             self.type1, self.type2 = label.split("_")[0:2]
             # self.type2_3 = "_".join(label.split("_")[1:3])
 
@@ -218,7 +219,7 @@ class api_interface(object):
             #                 警情摘要          反馈内容           类别1                类别2             类别3              类别4              类别2_类别3  错因
             self.new_sheet.to_excel('./static/result.xls')
 
-            accuracy, recall, fpr, indicit_l = self.percision_cal(compatible_count)
+            accuracy, recall, fpr, indicit_l = self.percision_cal(label, compatible_count)
 
             # return self.new_sheet, accuracy, recall, fpr
             return {'data': self.new_sheet.to_json(force_ascii=False),
@@ -234,7 +235,7 @@ class api_interface(object):
             print(e)
 
 
-    def percision_cal(self, count):
+    def percision_cal(self, label, count):
         '''
         @Author: hongwei.wang
         @date: 2020-07-29
@@ -251,10 +252,23 @@ class api_interface(object):
         total = new_sheet.shape[0]
         excel_header = new_sheet.columns.tolist()
         ee = new_sheet[excel_header[3]].tolist()  # 实际的 FIXME have a bug
+        dd = new_sheet[excel_header[2:6]].values.tolist()
+
+        # fake accuracy calculate
+        hh = [label for data in new_sheet[excel_header[3]]]
+        def str_list(x):
+            return list(map(lambda i:str(i), x))
+        dd = list(map(str_list, dd))
+        cc = ['_'.join(x) for x in dd] #
+        label_num = [x in y for x,y in zip(hh, cc)].count(True)
+        import pdb
+        pdb.set_trace()
+
         # print(new_sheet[excel_header[6]].tolist())
         ff = list(map(lambda x: x.split('_')[0] if '_' not in x else x.split('_')[1], new_sheet[excel_header[6]].tolist()))  # 推理的
-        
         gg = [self.type2 for data in new_sheet[excel_header[3]]]
+
+
         tt = list(map(lambda x, y: x == y, ee, gg))  # 实际为真
         ti = list(map(lambda x, y: x == y, ff, gg))  # 推理为真
 
@@ -266,11 +280,12 @@ class api_interface(object):
         # FP = len(new_sheet[excel_header[3]] == self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
         # TN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
         # FN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == self.type2)
+        fake_accuracy = float(TP) / label_num
         accuracy = float(float((TP + TN) / total)) * 100
-        recall = 0 if (TP + FN) == 0 else float(TP / (TP + FN)) * 100
+        recall = 0 if (TP + FN) == 0 else float(TP / (TP + TN)) * 100
         # fpr = 0 if len(new_sheet[excel_header[3]] != self.type2) == 0 else float(FN / len(new_sheet[excel_header[3]] != self.type2))
         fpr = 0 if (FP + TN) == 0 else float(FP / (FP + TN)) * 100
-        return accuracy, recall, fpr, [TP, FP, TN, FN]
+        return fake_accuracy, recall, fpr, [TP, FP, TN, FN]
 
 
     def query_data(self):
@@ -364,4 +379,4 @@ if __name__ == "__main__":
     # print(infer.extract_class_timestamp())
     # infer.update_class_timestamp("公共秩序管理类_盗销自行车_电动车", '2020-07-31 16:53:58')
     # print(infer.train("公共秩序管理类_医院号贩子", './test.xls'))
-    print(infer.train("公共秩序管理类_盗销自行车_电动车", './test.xls'))    
+    print(infer.train("公共秩序管理类_盗销自行车_电动车", './原始345月.xls'))
