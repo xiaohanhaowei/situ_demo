@@ -1,6 +1,6 @@
 import datetime
 from datetime import time
-from flask import Flask, request, jsonify, Response, render_template
+from flask import Flask, request, jsonify, Response, render_template, make_response
 from classify import once_forever, update_lib
 from werkzeug.utils import secure_filename
 from interface import api_interface
@@ -235,12 +235,14 @@ def search_result():
 
         print("result_type=", result_type, "page=", str(page), "pageSize=", pageSize)
 
-        datas = infer.obtain_sheet_slice(page, pageSize, result_type)
+        datas, total = infer.obtain_sheet_slice(page, pageSize, result_type)
 
         print("[INFO]: 完成调用推理结果 infer.obtain_sheet_slice")
 
         res["data"] = datas
+        res["total"] = total
         print("[result]:", datas)
+        print("total=", total)
 
     except Exception as e:
         res["code"] = 10000
@@ -805,6 +807,12 @@ def get_type5():
 
 def response(res):
     return Response(json.dumps(res, indent=2, ensure_ascii=False) + "\n", mimetype="application/json")
+
+
+def response2(res, total_count):
+    response = Response(json.dumps(res, indent=2, ensure_ascii=False) + "\n", mimetype="application/json")
+    response.headers['X-Total'] = total_count
+    return response
 
 
 def load_label(file_path='./library/label.json'):

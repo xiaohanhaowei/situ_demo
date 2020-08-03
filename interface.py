@@ -318,7 +318,8 @@ class api_interface(object):
         '''
         l_new_sheet = self.filter_content(criterion)
         slice_sheet = l_new_sheet[index: index + interval]
-        return slice_sheet.to_json(force_ascii=False)      
+        total = l_new_sheet.shape[0]
+        return slice_sheet.to_json(force_ascii=False), total
 
 
 if __name__ == "__main__":
