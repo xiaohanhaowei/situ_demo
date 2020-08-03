@@ -222,15 +222,18 @@ def search_result():
         result_type = request.args.get('resultType')
         pageIndex = int(request.args.get('pageIndex'))
         pageSize = int(request.args.get('pageSize'))
+        print("result_type=", result_type, "pageIndex=", str(pageIndex), "pageSize=", pageSize)
 
         datas = []
 
         print("[INFO]: 开始调用推理结果 infer.obtain_sheet_slice")
 
-        page = (pageIndex -1) * pageSize
+        page = (pageIndex - 1) * pageSize
 
         if result_type is None or result_type == "":
             result_type = "all"
+
+        print("result_type=", result_type, "page=", str(page), "pageSize=", pageSize)
 
         datas = infer.obtain_sheet_slice(page, pageSize, result_type)
 
