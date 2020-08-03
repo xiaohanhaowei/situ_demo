@@ -136,91 +136,97 @@ class api_interface(object):
         @return: 
         @raise: 
         '''
-        length = len(label.split('_'))
-        self.type1, self.type2 = label.split("_")[0:2]
-        # self.type2_3 = "_".join(label.split("_")[1:3])
+        try:
+            length = len(label.split('_'))
+            self.type1, self.type2 = label.split("_")[0:2]
+            # self.type2_3 = "_".join(label.split("_")[1:3])
 
-        sheet = pd.read_excel(excel_path)
-        excel_header = sheet.columns.tolist()
-        print(excel_header)
-        ncols = sheet.shape[1]
-        data = sheet.values
-        new_data = list()
-        reason_list = list()
-        real_data_list = list()
-        eval_list = list()
-        compatible_count = 0
-        for sub_data in data:
-            sub_data_content = []
-            valid_label = list(map(lambda x: str(x), sub_data[18:].tolist()))
-            valid_label_set = set(valid_label)
-            valid_label_set.remove('nan')
-            valid_label_new = list(valid_label_set)
-            valid_label_new.sort(key=valid_label.index)
-            if '_'.join(valid_label_new[:]) not in label:
-                sub_real_data = '其他'
-            else:
-                sub_real_data = label
-            for i in range(2):
-                if str(sub_data[5 + i]) == 'nan':
-                    break
+            sheet = pd.read_excel(excel_path)
+            excel_header = sheet.columns.tolist()
+            print(excel_header)
+            ncols = sheet.shape[1]
+            data = sheet.values
+            new_data = list()
+            reason_list = list()
+            real_data_list = list()
+            eval_list = list()
+            compatible_count = 0
+            if len(data) == 0:
+                raise ValueError('excel表中没有数据，请添加新的excel。')
+            for sub_data in data:
+                sub_data_content = []
+                valid_label = list(map(lambda x: str(x), sub_data[18:].tolist()))
+                valid_label_set = set(valid_label)
+                if 'nan' in valid_label_set:
+                    valid_label_set.remove('nan')
+                valid_label_new = list(valid_label_set)
+                valid_label_new.sort(key=valid_label.index)
+                if '_'.join(valid_label_new[:]) not in label:
+                    sub_real_data = '其他'
                 else:
-                    sub_data[5 + i] = sub_data[5 + i].replace('\n', '')
-                    sub_data[5 + i] = sub_data[5 + i].replace('\\n', '')
-                    sub_data[5 + i] = sub_data[5 + i].replace(' ', '')
-                    sub_data[5 + i] = sub_data[5 + i].replace('\r', '')
-                    sub_data_content.append(sub_data[5 + i].strip('。'))
-            # FIXME: Check if the content is blank!!
-            sentence = ';'.join(sub_data_content[:2])
-            if len(sub_data_content) != 2:
-                result = '其他'
-                reason = 'no_content'
-            else:
-
-                result, reason = classify.single_detect_for_analyse(self.content, label, sentence)
-                if '_' in result:
-                    if result.split('_')[1] == self.type2 and sub_data[19] == self.type2:
-                        compatible_count += 1 
-            if '_' in result: # the result is only the name of label
-                if sub_real_data == label: 
-                    eval = 'True'
+                    sub_real_data = label
+                for i in range(2):
+                    if str(sub_data[5 + i]) == 'nan':
+                        break
+                    else:
+                        sub_data[5 + i] = sub_data[5 + i].replace('\n', '')
+                        sub_data[5 + i] = sub_data[5 + i].replace('\\n', '')
+                        sub_data[5 + i] = sub_data[5 + i].replace(' ', '')
+                        sub_data[5 + i] = sub_data[5 + i].replace('\r', '')
+                        sub_data_content.append(sub_data[5 + i].strip('。'))
+                # FIXME: Check if the content is blank!!
+                sentence = '；'.join(sub_data_content[:2])
+                if len(sub_data_content) != 2:
+                    result = '其他'
+                    reason = 'no_content'
                 else:
-                    eval = 'False'
-            else: #其他
-                if  sub_real_data == label: 
-                    eval = 'False'
-                else:
-                    eval = 'True'
-            new_data.append(result)
-            reason_list.append(reason)
-            real_data_list.append(sub_real_data)
-            eval_list.append(eval)
-        # sheet['result'] = pd.Series(new_data)
-        # sheet['reason'] = pd.Series(reason_list)
 
-        sheet.insert(ncols, "result", new_data)
-        sheet.insert(ncols+1, "evaluate", eval_list)
-        sheet.insert(ncols+2, "reason", reason_list)
-        sheet.insert(ncols+3, 'real_data', real_data_list)
-        # sheet.to_excel('./static/result-%s.xls' % excel_path.split('.xls')[0].split('/')[-1], index=False)
-        self.new_sheet = pd.DataFrame(sheet,
-            columns=[excel_header[5], excel_header[6], excel_header[18], excel_header[19], excel_header[20],
-                excel_header[21], 'result', 'evaluate', 'reason', 'real_data'])
-        #                 警情摘要          反馈内容           类别1                类别2             类别3              类别4              类别2_类别3  错因
-        self.new_sheet.to_excel('./static/result.xls')
+                    result, reason = classify.single_detect_for_analyse(self.content, label, sentence)
+                    if '_' in result:
+                        if result.split('_')[1] == self.type2 and sub_data[19] == self.type2:
+                            compatible_count += 1 
+                if '_' in result: # the result is only the name of label
+                    if sub_real_data == label: 
+                        eval = 'True'
+                    else:
+                        eval = 'False'
+                else: #其他
+                    if  sub_real_data == label: 
+                        eval = 'False'
+                    else:
+                        eval = 'True'
+                new_data.append(result)
+                reason_list.append(reason)
+                real_data_list.append(sub_real_data)
+                eval_list.append(eval)
+            # sheet['result'] = pd.Series(new_data)
+            # sheet['reason'] = pd.Series(reason_list)
 
-        accuracy, recall, fpr, indicit_l = self.percision_cal(compatible_count)
+            sheet.insert(ncols, "result", new_data)
+            sheet.insert(ncols+1, "evaluate", eval_list)
+            sheet.insert(ncols+2, "reason", reason_list)
+            sheet.insert(ncols+3, 'real_data', real_data_list)
+            # sheet.to_excel('./static/result-%s.xls' % excel_path.split('.xls')[0].split('/')[-1], index=False)
+            self.new_sheet = pd.DataFrame(sheet,
+                columns=[excel_header[5], excel_header[6], excel_header[18], excel_header[19], excel_header[20],
+                    excel_header[21], 'result', 'evaluate', 'reason', 'real_data'])
+            #                 警情摘要          反馈内容           类别1                类别2             类别3              类别4              类别2_类别3  错因
+            self.new_sheet.to_excel('./static/result.xls')
 
-        # return self.new_sheet, accuracy, recall, fpr
-        return {'data': self.new_sheet.to_json(force_ascii=False),
-                'indict': {
-                    'len': int(self.new_sheet.shape[0]),
-                    'correct': int(indicit_l[0] + indicit_l[2]),
-                    'accuracy': accuracy, 
-                    'recall': recall, 
-                    'fpr': fpr
+            accuracy, recall, fpr, indicit_l = self.percision_cal(compatible_count)
+
+            # return self.new_sheet, accuracy, recall, fpr
+            return {'data': self.new_sheet.to_json(force_ascii=False),
+                    'indict': {
+                        'len': int(self.new_sheet.shape[0]),
+                        'correct': int(indicit_l[0] + indicit_l[2]),
+                        'accuracy': recall, 
+                        'recall': recall, 
+                        'fpr': fpr
+                        }
                     }
-                }
+        except Exception as e:
+            print(e)
 
 
     def percision_cal(self, count):
@@ -345,7 +351,7 @@ if __name__ == "__main__":
     #
     # infer.update_online(type1_type2_="公共秩序管理类_盗销自行车_电动车")
     # infer.update_online(type1_type2_="公共秩序管理类_盗销自行车_自行车")
-    print("update label and time", infer.update_label_time())
+    # print("update label and time", infer.update_label_time())
 
 
 
@@ -353,4 +359,4 @@ if __name__ == "__main__":
     # print(infer.extract_class_timestamp())
     # infer.update_class_timestamp("公共秩序管理类_盗销自行车_电动车", '2020-07-31 16:53:58')
     # print(infer.train("公共秩序管理类_医院号贩子", './test.xls'))
-    print(infer.train("公共秩序管理类_盗销自行车_电动车", './test.xls'))
+    print(infer.train("公共秩序管理类_盗销自行车_电动车", './test.xls'))    
