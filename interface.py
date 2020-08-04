@@ -229,7 +229,7 @@ class api_interface(object):
                     'indict': {
                         'len': int(indicit_l[-1]),
                         'correct': int(indicit_l[0]),
-                        'accuracy': recall, 
+                        'accuracy': accuracy, 
                         'recall': recall, 
                         'fpr': fpr
                         }
