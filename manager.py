@@ -1,7 +1,7 @@
 import datetime
 from datetime import time
 from flask import Flask, request, jsonify, Response, render_template, make_response
-from classify import once_forever, update_lib
+from classify import once_forever, update_lib, extract_class_timestamp
 from werkzeug.utils import secure_filename
 from interface import api_interface
 import json
@@ -278,7 +278,8 @@ def online_list():
 
         print("开始获取上线标签, ")
 
-        data = infer.extract_class_timestamp()
+        # data = infer.extract_class_timestamp()
+        data = extract_class_timestamp()
 
         print("完成获取上线标签, ")
 

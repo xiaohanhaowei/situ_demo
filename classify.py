@@ -380,6 +380,16 @@ def update_lib():
     content = load_rules(path)
 
 
+def extract_class_timestamp():
+    online_dict = {}
+    keys = list(content.keys())
+    for sub_class in keys:
+        timestamp = content[sub_class].get('time', '')
+        if timestamp != '':
+            online_dict[sub_class] = timestamp
+    return online_dict
+
+
 def once_forever(sentence):
     slice_p = check_rules(sentence)
     one_hot_dict = single_detect(content, slice_p)
