@@ -281,7 +281,7 @@ class api_interface(object):
         # FP = len(new_sheet[excel_header[3]] == self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
         # TN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
         # FN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == self.type2)
-        fake_accuracy = float(TP) / label_num
+        fake_accuracy = float(TP) / label_num * 100
         accuracy = float(float((TP + TN) / total)) * 100
         recall = 0 if (TP + FN) == 0 else float(TP / (TP + TN)) * 100
         # fpr = 0 if len(new_sheet[excel_header[3]] != self.type2) == 0 else float(FN / len(new_sheet[excel_header[3]] != self.type2))
