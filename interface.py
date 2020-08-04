@@ -227,8 +227,8 @@ class api_interface(object):
             # return self.new_sheet, accuracy, recall, fpr
             return {'data': self.new_sheet.to_json(force_ascii=False),
                     'indict': {
-                        'len': int(self.new_sheet.shape[0]),
-                        'correct': int(indicit_l[0] + indicit_l[2]),
+                        'len': int(indicit_l[-1]),
+                        'correct': int(indicit_l[0]),
                         'accuracy': recall, 
                         'recall': recall, 
                         'fpr': fpr
@@ -286,7 +286,7 @@ class api_interface(object):
         recall = 0 if (TP + FN) == 0 else float(TP / (TP + TN)) * 100
         # fpr = 0 if len(new_sheet[excel_header[3]] != self.type2) == 0 else float(FN / len(new_sheet[excel_header[3]] != self.type2))
         fpr = 0 if (FP + TN) == 0 else float(FP / (FP + TN)) * 100
-        return fake_accuracy, recall, fpr, [TP, FP, TN, FN]
+        return fake_accuracy, recall, fpr, [TP, FP, TN, FN,label_num]
 
 
     def query_data(self):
