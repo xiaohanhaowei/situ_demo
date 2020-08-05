@@ -228,18 +228,24 @@ class api_interface(object):
             #                 警情摘要          反馈内容           类别1                类别2             类别3              类别4              类别2_类别3  错因
             self.new_sheet.to_excel('./static/result.xls')
 
+            new_sheet1 = self.new_sheet[self.new_sheet['evaluate'] == 'True']
+            new_sheet1.to_excel('./static/result-true.xls')
+
+            new_sheet1 = self.new_sheet[self.new_sheet['evaluate'] == 'False']
+            new_sheet1.to_excel('./static/result-false.xls')
+
             accuracy, fake_accuracy, other_accuracy, fpr, indicit_l = self.percision_cal(label, compatible_count)
 
             # return self.new_sheet, accuracy, recall, fpr
             return {# 'data': self.new_sheet.to_json(force_ascii=False),
                     'indict': {
-                        'c-len': int(indicit_l[-2]), # lable_num
-                        'c-correct': int(indicit_l[0]), # TP
-                        'c-accuracy': fake_accuracy, 
-                        'o-len': int(indicit_l[-1]), # other_num
-                        'o-correct': int(indicit_l[1]), # TN
-                        'o-accuracy': other_accuracy,
-                        'fpr': fpr
+                        'c-len': int(indicit_l[-2]),  # lable_num 应正确数
+                        'c-correct': int(indicit_l[0]),  # TP  推理正确数
+                        'c-accuracy': fake_accuracy,  # 推理准确率
+                        'o-len': int(indicit_l[-1]),  # other_num 应其他数
+                        'o-correct': int(indicit_l[1]),  # TN 推理其他数
+                        'o-accuracy': other_accuracy,  # 其他准确率
+                        'fpr': fpr  # 误报率
                         }
                     }
         except Exception as e:

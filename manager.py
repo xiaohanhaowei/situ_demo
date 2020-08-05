@@ -106,6 +106,14 @@ def download():
     """下载文件
 
     @@@
+    #### body参数[json格式]
+
+    | args | nullable | type | remark |
+    |--------|--------|--------|--------|
+    |    type    |    false    |    string  |    类型[all:全部  True:正确  False:错误]    |
+
+    #### 注意
+    调用导出接口前，先查询
 
     @@@
     """
@@ -117,7 +125,16 @@ def download():
     try:
         print("[request]:", request.data.decode(encoding='utf-8'))
 
-        res["data"] = "/result.xls"
+        link = '/result.xls'
+        type = request.json['type']
+        if type is None or type == '' or type == 'all':
+            link = '/result.xls'
+        elif type == 'True':
+            link = '/result-true.xls'
+        elif type == 'False':
+            link = '/result-false.xls'
+
+        res["data"] = link
 
     except Exception as e:
         res["code"] = 10000
@@ -148,6 +165,21 @@ def train():
     {"result":[],
     "acc": {}
     }
+
+    | args | nullable | type | remark |
+    |--------|--------|--------|--------|
+    |    indict    |    false    |    dict  |    指标字典    |
+
+    | args | nullable | type | remark |
+    |--------|--------|--------|--------|
+    |    c-len    |    false    |    int  |    应正确数    |
+    |    c-correct    |    false    |    int  |    推理正确数    |
+    |    c-accuracy    |    false    |    float  |    推理准确率    |
+    |    o-len    |    false    |    int  |    应其他数    |
+    |    o-correct    |    false    |    int  |    推理其他数    |
+    |    o-accuracy    |    false    |    float  |    其他准确率    |
+    |    fpr    |    false    |    float  |    误报率    |
+
     #### example
     ```
 
