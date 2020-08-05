@@ -202,7 +202,7 @@ def single_detect_for_analyse(content, target_label, single_slice):
             for verb in verb_grp:
                 if verb in single_slice:
                     print('in %s' % correspond_class)
-                    return correspond_class, verb
+                    return correspond_class, ''
                 else:
                     continue
             return '其他', 'no_verb'

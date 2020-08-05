@@ -167,7 +167,9 @@ class api_interface(object):
                 valid_label_new.sort(key=valid_label.index)
                 valid_len = len(valid_label_new)
                 # 预防实际标签为空的情况
-                if valid_len < 2:
+                if valid_len == 0:
+                    sub_real_data = '未知'
+                elif valid_len > 0 and valid_len != length:
                     sub_real_data = '其他'
                 else:
                     if '_'.join(valid_label_new[:]) not in label:
@@ -195,12 +197,16 @@ class api_interface(object):
                         if result.split('_')[1] == self.type2 and sub_data[19] == self.type2:
                             compatible_count += 1 
                 if '_' in result: # the result is only the name of label
-                    if sub_real_data == label: 
+                    if sub_real_data == '未知':
+                        eval = 'unknown'
+                    elif sub_real_data == label: 
                         eval = 'True'
                     else:
                         eval = 'False'
                 else: #其他
-                    if  sub_real_data == label: 
+                    if sub_real_data == '未知':
+                        eval = 'unknown'
+                    elif  sub_real_data == label: 
                         eval = 'False'
                     else:
                         eval = 'True'
@@ -222,15 +228,17 @@ class api_interface(object):
             #                 警情摘要          反馈内容           类别1                类别2             类别3              类别4              类别2_类别3  错因
             self.new_sheet.to_excel('./static/result.xls')
 
-            accuracy, recall, fpr, indicit_l = self.percision_cal(label, compatible_count)
+            accuracy, fake_accuracy, other_accuracy, fpr, indicit_l = self.percision_cal(label, compatible_count)
 
             # return self.new_sheet, accuracy, recall, fpr
-            return {'data': self.new_sheet.to_json(force_ascii=False),
+            return {# 'data': self.new_sheet.to_json(force_ascii=False),
                     'indict': {
-                        'len': int(indicit_l[-1]),
-                        'correct': int(indicit_l[0]),
-                        'accuracy': accuracy, 
-                        'recall': recall, 
+                        'c-len': int(indicit_l[-2]), # lable_num
+                        'c-correct': int(indicit_l[0]), # TP
+                        'c-accuracy': fake_accuracy, 
+                        'o-len': int(indicit_l[-1]), # other_num
+                        'o-correct': int(indicit_l[1]), # TN
+                        'o-accuracy': other_accuracy,
                         'fpr': fpr
                         }
                     }
@@ -252,26 +260,38 @@ class api_interface(object):
         recall = 0.
         fpr = 0.
 
-        total = new_sheet.shape[0]
+        # total = new_sheet.shape[0]
         excel_header = new_sheet.columns.tolist()
+        # ['警情摘要', '反馈内容', '警情类别1(总队)', '警情类别2(总队)', '警情类别3(总队)', '警情类别4(总队)', 
+        # 'result', 'evaluate', 'reason', 'real_data']
         ee = new_sheet[excel_header[3]].tolist()  # 实际的 FIXME have a bug
-        dd = new_sheet[excel_header[2:6]].values.tolist()
+        dd = new_sheet[excel_header[2:6]].values.tolist() # 真正实际的总数
 
         # fake accuracy calculate
         hh = [label for data in new_sheet[excel_header[3]]]
         def str_list(x):
             return list(map(lambda i:str(i), x))
         dd = list(map(str_list, dd))
-        cc = ['_'.join(x) for x in dd] #
-        label_num = [x in y for x,y in zip(hh, cc)].count(True)
+        cc = ['_'.join(x) for x in dd] #把类别1到类别4连起来 肯定会有bug
+        label_num = [x in y for x, y in zip(hh, cc)].count(True)
 
         # print(new_sheet[excel_header[6]].tolist())
-        ff = list(map(lambda x: x.split('_')[0] if '_' not in x else x.split('_')[1], new_sheet[excel_header[6]].tolist()))  # 推理的
-        gg = [self.type2 for data in new_sheet[excel_header[3]]]
+        # 以下对比只对比了type2
+        # ===========================
+        # ff = list(map(lambda x: x.split('_')[0] if '_' not in x else x.split('_')[1], new_sheet[excel_header[6]].tolist()))  # 推理的
+        # gg = [self.type2 for data in new_sheet[excel_header[3]]]
+        # tt = list(map(lambda x, y: x == y, ee, gg))  # 实际为真
+        # ti = list(map(lambda x, y: x == y, ff, gg))  # 推理为真
+        # ============================
 
-
-        tt = list(map(lambda x, y: x == y, ee, gg))  # 实际为真
-        ti = list(map(lambda x, y: x == y, ff, gg))  # 推理为真
+        # 以下对比为对比全类别
+        # ============================
+        benchmark_sheet = new_sheet[new_sheet['real_data'] != '未知']
+        total = benchmark_sheet.shape[0]
+        tt = list(map(lambda x: x == label, benchmark_sheet['real_data'].values.tolist()))  # 实际为真 filter this column of content
+        ti = list(map(lambda x: x == label, benchmark_sheet['result'].values.tolist()))# 推理为真
+        other_num = new_sheet[new_sheet['real_data'] == '其他'].shape[0]
+        # ============================
 
         TP = sum([x == True and y == True for x, y in zip(ti, tt)])
         TN = sum([x == False and y == False for x, y in zip(ti, tt)])
@@ -281,12 +301,13 @@ class api_interface(object):
         # FP = len(new_sheet[excel_header[3]] == self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
         # TN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == '其他')
         # FN = len(new_sheet[excel_header[3]] != self.type2 and new_sheet[excel_header[6]].split('_')[0] == self.type2)
-        fake_accuracy = float(TP) / label_num * 100
+        fake_accuracy = 0 if label_num==0 else float(TP) / label_num * 100
         accuracy = float(float((TP + TN) / total)) * 100
-        recall = 0 if (TP + FN) == 0 else float(TP / (TP + TN)) * 100
+        other_accuracy = 0 if other_num==0 else float(TN) / other_num * 100
+        recall = 0 if (TP + FN) == 0 else float(TP / (TP + FN)) * 100
         # fpr = 0 if len(new_sheet[excel_header[3]] != self.type2) == 0 else float(FN / len(new_sheet[excel_header[3]] != self.type2))
         fpr = 0 if (FP + TN) == 0 else float(FP / (FP + TN)) * 100
-        return fake_accuracy, recall, fpr, [TP, FP, TN, FN,label_num]
+        return accuracy, fake_accuracy, other_accuracy, fpr, [TP, TN, FP, FN, label_num, other_num]
 
 
     def query_data(self):
@@ -380,4 +401,4 @@ if __name__ == "__main__":
     # print(infer.extract_class_timestamp())
     # infer.update_class_timestamp("公共秩序管理类_盗销自行车_电动车", '2020-07-31 16:53:58')
     # print(infer.train("公共秩序管理类_医院号贩子", './test.xls'))
-    print(infer.train("公共秩序管理类_盗销自行车_电动车", './原始345月.xls'))
+    print(infer.train("公共秩序管理类_盗销自行车_电动车", './test.xls'))
